@@ -18,18 +18,39 @@ def getData():
 	X_source, y_source = [], []
 	savebase = "./SleepSource/"
 	for i_train in range(38):
-	    with open(osp.join(savebase, "training_s{}r1X.npy".format(i_train)), 'rb') as f:
-	        subData = pickle.load(f)
-	        lenData = subData.shape[0]
-	        subData = np.reshape(subData, (lenData, -1, 2))
-	        X_source.append(subData)
-	    with open(osp.join(savebase, "training_s{}r1y.npy".format(i_train)), 'rb') as f:
-	        y_source.append(pickle.load(f))
+		with open(osp.join(savebase, "training_s{}r1X.npy".format(i_train)), 'rb') as f:
+			subData = pickle.load(f)
+			subData = np.transpose(subData, (0, 2, 1))
+			X_source.append(subData)
+		with open(osp.join(savebase, "training_s{}r1y.npy".format(i_train)), 'rb') as f:
+			y_source.append(pickle.load(f))
+		with open(osp.join(savebase, "training_s{}r2X.npy".format(i_train)), 'rb') as f:
+			subData = pickle.load(f)
+			subData = np.transpose(subData, (0, 2, 1))
+			X_source.append(subData)
+		with open(osp.join(savebase, "training_s{}r2y.npy".format(i_train)), 'rb') as f:
+			y_source.append(pickle.load(f))
 	X_source = np.concatenate(X_source)
 	y_source = np.concatenate(y_source)
-	print("Source: there are {} trials with {} electrodes and {} time samples".format(*X_source.shape))
+	print("Source: there are {} trials with {} time samples and {} electrodes ".format(*X_source.shape))
 	return X_source, y_source
 
+
+def getTargetData():
+	X_source= []
+	savebase = "./LeaderboardSleep/testing/"
+	for i_train in range(6, 18):
+		with open(osp.join(savebase, "leaderboard_s{}r1X.npy".format(i_train)), 'rb') as f:
+			subData = pickle.load(f)
+			subData = np.transpose(subData, (0, 2, 1))
+			X_source.append(subData)
+		with open(osp.join(savebase, "leaderboard_s{}r2X.npy".format(i_train)), 'rb') as f:
+			subData = pickle.load(f)
+			subData = np.transpose(subData, (0, 2, 1))
+			X_source.append(subData)
+	X_source = np.concatenate(X_source)
+	print("Source: there are {} trials with {} time samples {} electrodes ".format(*X_source.shape))
+	return X_source
 
 def analyzeTrainData(Xs, Ys):
 	print("Shape of train data X_source", Xs.shape)

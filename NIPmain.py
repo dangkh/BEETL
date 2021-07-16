@@ -39,7 +39,7 @@ if __name__ == "__main__":
 	lacc = []
 
 
-	for epoch in range(n_epochs):  # loop over the dataset multiple times
+	for epoch in range(0):  # loop over the dataset multiple times
 		model.train()
 		print("epoch:     ", epoch)
 		running_loss = 0.0
@@ -106,3 +106,21 @@ if __name__ == "__main__":
 					counter += 1
 	print('acc: {:1f}%'.format(100 * counter / total))
 
+	# test the target
+	Xtarget = getTargetData()
+	finaldataset = EEG_data(Xtarget)
+	finalLoader = torch.utils.data.DataLoader(dataset=finaldataset, batch_size= 32)
+	counter = 0
+	resTest = []
+	for idx, data in enumerate(finalLoader):
+		xx = data
+		# cuda
+		if torch.cuda.is_available():
+			xx = xx.cuda()
+		with torch.no_grad():
+			model.eval()
+			pred = model(xx)
+			res = torch.argmax(pred, 1)
+			resTest.extend(res.cpu().numpy())
+
+	np.savetxt("./answer.txt",[resTest],delimiter=',', fmt = "%d")
