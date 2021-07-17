@@ -34,7 +34,7 @@ if __name__ == "__main__":
 	lr = 1e-4
 	optimizer = optim.Adam(model.parameters(), lr=lr)
 	scheduler = lr_scheduler.StepLR(optimizer, 16, gamma=0.1, last_epoch=-1)
-	n_epochs = 0
+	n_epochs = 200
 	log_batch = 200
 	llos = []
 	lacc = []
