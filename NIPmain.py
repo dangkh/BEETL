@@ -20,7 +20,8 @@ if __name__ == "__main__":
 	analyzeTrainData(Xs, ys)
 	newXs, newYs = balanceData(Xs, ys)
 	analyzeTrainData(newXs, newYs)
-
+	newXs, newYs = augmentData(newXs, newYs, labels = [1, 3, 4])
+	analyzeTrainData(newXs, newYs)
 	trainLoader, testLoader = TrainTestLoader(newXs, newYs, 0.1)
 
 	# train model
@@ -34,13 +35,13 @@ if __name__ == "__main__":
 	lr = 1e-4
 	optimizer = optim.Adam(model.parameters(), lr=lr)
 	scheduler = lr_scheduler.StepLR(optimizer, 16, gamma=0.1, last_epoch=-1)
-	n_epochs = 200
+	n_epochs = 0
 	log_batch = 200
 	llos = []
 	lacc = []
 
 
-	for epoch in range(0):  # loop over the dataset multiple times
+	for epoch in range(n_epochs):  # loop over the dataset multiple times
 		model.train()
 		print("epoch:     ", epoch)
 		running_loss = 0.0
