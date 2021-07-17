@@ -19,6 +19,7 @@ class LSTMNet(nn.Module):
         torch.nn.init.xavier_uniform_(self.conv3.weight, gain=1)
         self.avg = nn.AvgPool2d([8,1])
         self.lstm = nn.LSTM(1, 4, bidirectional  = True, batch_first=True)
+        self.sm = nn.Softmax(dim=-1)
 
     def forward(self, x):
         output = self.conv1(x)
@@ -35,5 +36,5 @@ class LSTMNet(nn.Module):
         output = torch.flatten(h_lstm,1)
         output = self.drop1(output)
         output = self.fc(output)
-        scores = F.log_softmax(output, dim=-1)
+        scores = self.sm(output)
         return scores

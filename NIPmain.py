@@ -34,7 +34,8 @@ if __name__ == "__main__":
 	lr = 1e-4
 	optimizer = optim.Adam(model.parameters(), lr=lr)
 	scheduler = lr_scheduler.StepLR(optimizer, 16, gamma=0.1, last_epoch=-1)
-	n_epochs = 100
+	n_epochs = 0
+	log_batch = 200
 	llos = []
 	lacc = []
 
@@ -64,9 +65,9 @@ if __name__ == "__main__":
 			# print statistics
 			running_loss += loss.item()
 			total_loss += loss.item()
-			if i % 200 == 199:    # print every 200 mini-batches
+			if i % log_batch == (log_batch - 1):    # print every 200 mini-batches
 				print('[%d, %5d] loss: %.3f' %
-						(epoch + 1, i + 1, running_loss / 200))
+						(epoch + 1, i + 1, running_loss / log_batch))
 				running_loss = 0.0
 		mean_loss = total_loss / len(trainLoader)
 		llos.append(mean_loss)
@@ -91,8 +92,11 @@ if __name__ == "__main__":
 	# plot info
 	counter = 0
 	total = 0
+	preds = []
+	trueLabel = []
 	for idx, data in enumerate(testLoader):
 		xx, yy = data
+		trueLabel.extend(yy.numpy())
 		total += len(yy)
 		# cuda
 		if torch.cuda.is_available():
@@ -101,11 +105,17 @@ if __name__ == "__main__":
 			model.eval()
 			pred = model(xx)
 			res = torch.argmax(pred, 1)
+			if torch.cuda.is_available():
+				res = res.cpu()
+			preds.extend(res.numpy())
 			for id, ypred in enumerate(res):
 				if ypred == yy[id].item():
 					counter += 1
 	print('acc: {:1f}%'.format(100 * counter / total))
-
+	# plotLossAcc(llos, lacc)
+	plot_confusion_matrix(trueLabel, preds, classes=['0', '1', '2', '3', '4', '5'], 
+                                      normalize=True, title='Validation confusion matrix')
+	plt.show()
 	# test the target
 	Xtarget = getTargetData()
 	finaldataset = EEG_data(Xtarget)
