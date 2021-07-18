@@ -18,3 +18,7 @@ This pipeline construct based on a stardard-few shot learning set up:
 - Train feature extractor for base-train loader
 - Evaluate feature extractor/classify-head models by valid loader
 - Create submit
+
+# Task 1: 
+- Train all data set
+- Finetune on 1-2 in 5 provided valid, check in remaining  
