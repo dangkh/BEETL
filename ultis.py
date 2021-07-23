@@ -7,6 +7,9 @@ from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms
 import torch
 from sklearn.metrics import confusion_matrix
+from moabb.datasets import BNCI2014001, Cho2017, PhysionetMI
+from moabb.paradigms import MotorImagery
+from beetl.task_datasets import BeetlSleepLeaderboard, BeetlMILeaderboard
 
 
 def infoData():
@@ -97,8 +100,11 @@ class EEG_data(Dataset):
 		else:
 			return self.transform(self.X[idx])
 
-def TrainTestLoader(Xs, ys, testSize):
-	X_train, X_test, y_train, y_test = train_test_split(Xs, ys, test_size=testSize, random_state=42)
+def TrainTestLoader(data, testSize = 0.1):
+	if len(data) == 2:
+		X_train, X_test, y_train, y_test = train_test_split(data[0], data[1], test_size=testSize, random_state=42)
+	else:
+		[X_train, X_test, y_train, y_test] = data
 	batch_size = 32
 
 	train_dataset = EEG_data(X_train, y_train)
@@ -335,3 +341,92 @@ def augmentData_Noise(Xs, Ys, labels):
 	newXs.extend(Xs)
 	newYs.extend(Ys)
 	return np.asarray(newXs), np.asarray(newYs)
+
+
+def relabel(l):
+	if l == 'left_hand': return 0
+	elif l == 'right_hand': return 1
+	else: return 2
+
+def trainData_task2():
+	mysubjects = [x+1 for x in range(8)]
+	X_src1, label_src1, m_src1 = prgm_2classes.get_data(dataset=ds_src1 , subjects= mysubjects)
+	X_src1 = np.transpose(X_src1, (0, 2, 1))
+	X_src2, label_src2, m_src2 = prgm_4classes.get_data(dataset=ds_src2, subjects= mysubjects)
+	X_src2 = np.transpose(X_src2, (0, 2, 1))
+	X_tgt, label_tgt, m_tgt = prgm_4classes.get_data(dataset=ds_tgt, subjects=mysubjects)
+	X_tgt = np.transpose(X_tgt, (0, 2, 1))
+
+	print("First source dataset has {} trials with {} electrodes and {} time samples".format(*X_src1.shape))
+	print("Second source dataset has {} trials with {} electrodes and {} time samples".format(*X_src2.shape))
+	print("Third source dataset has {} trials with {} electrodes and {} time samples".format(*X_tgt.shape))
+
+	y_src1 = np.array([relabel(l) for l in label_src1])
+	y_src2 = np.array([relabel(l) for l in label_src2])
+	y_tgt = np.array([relabel(l) for l in label_tgt])
+
+	window_size = min(X_src1.shape[1], X_src2.shape[1], X_tgt.shape[1])
+
+	X_train = np.concatenate((X_src1[:, :window_size, :], X_src2[:, :window_size, :], X_tgt[:-100, :window_size, :]))
+	y_train = np.concatenate((y_src1, y_src2, y_tgt[:-100]))
+
+	X_val = X_tgt[-100:, :window_size, :]
+	y_val = y_tgt[-100:]
+
+
+	print("Train:  there are {} trials with {} time samples and {} electrodes".format(*X_train.shape))
+	print("\nValidation: there are {} trials with {} time samples and {} electrodes".format(*X_val.shape))
+	return X_train, y_train, X_val, y_val
+
+def tranferData_task2():
+	s1 = [9, 10]
+	X_src1, label_src1, m_src1 = prgm_2classes.get_data(dataset=ds_src1 , subjects= s1)
+	X_src1 = np.transpose(X_src1, (0, 2, 1))
+	s2 = [9, 10]
+	X_src2, label_src2, m_src2 = prgm_4classes.get_data(dataset=ds_src2, subjects= s2)
+	X_src2 = np.transpose(X_src2, (0, 2, 1))
+	s3 = [9]
+	X_tgt, label_tgt, m_tgt = prgm_4classes.get_data(dataset=ds_tgt, subjects=s3)
+	X_tgt = np.transpose(X_tgt, (0, 2, 1))
+
+	print("First source dataset has {} trials with {} electrodes and {} time samples".format(*X_src1.shape))
+	print("Second source dataset has {} trials with {} electrodes and {} time samples".format(*X_src2.shape))
+	print("Third Source dataset has {} trials with {} electrodes and {} time samples".format(*X_tgt.shape))
+
+	y_src1 = np.array([relabel(l) for l in label_src1])
+	y_src2 = np.array([relabel(l) for l in label_src2])
+	y_tgt = np.array([relabel(l) for l in label_tgt])
+
+	window_size = min(X_src1.shape[1], X_src2.shape[1], X_tgt.shape[1])
+
+	Xs = np.concatenate((X_src1[:, :window_size, :], X_src2[:, :window_size, :], X_tgt[:, :window_size, :]))
+	ys = np.concatenate((y_src1, y_src2, y_tgt))
+
+	print("Train:  there are {} trials with {} time samples and {} electrodes".format(*Xs.shape))
+	return Xs, ys
+
+def loadTarget_task2():
+	_, _,  = BeetlMILeaderboard().get_data(dataset='A')
+	print ("MI leaderboard A: There are {} trials with {} electrodes and {} time samples".format(*X_MIA_test.shape))
+	_, _, X_MIB_test = BeetlMILeaderboard().get_data(dataset='B')
+	print ("MI leaderboard B: There are {} trials with {} electrodes and {} time samples".format(*X_MIB_test.shape))
+	return X_MIA_test, X_MIB_test
+
+def getData_task2():
+	ds_src1 = Cho2017()
+	ds_src2 = PhysionetMI()
+	ds_tgt = BNCI2014001()
+
+	fmin, fmax = 0, 60
+	raw = ds_tgt.get_data(subjects=[1])[1]['session_T']['run_1']
+	tgt_channels = raw.pick_types(eeg=True).ch_names
+
+	print("list channels will be extracted: {}".format(tgt_channels)
+	sfreq = 250.
+	prgm_2classes = MotorImagery(n_classes=2, channels=tgt_channels, resample=sfreq, fmin=fmin, fmax=fmax)
+	prgm_4classes = MotorImagery(n_classes=4, channels=tgt_channels, resample=sfreq, fmin=fmin, fmax=fmax)
+	X_train, y_train, X_val, y_val = trainData_task2()
+	Xs, ys = tranferData_task2()
+	XA, XB = loadTarget_task2()
+
+

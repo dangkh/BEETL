@@ -1,3 +1,4 @@
+
 from braindecode.util import set_random_seeds, np_to_var, var_to_np
 import matplotlib.pyplot as plt
 from moabb.datasets import BNCI2014001, Cho2017, PhysionetMI
