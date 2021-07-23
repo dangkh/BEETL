@@ -18,9 +18,11 @@ if __name__ == "__main__":
 	np.random.seed(SEED)
 
 	analyzeTrainData(Xs, ys)
-	newXs, newYs = balanceData(Xs, ys)
+	newXs, newYs = augmentData(Xs, ys, labels = [4])
+	newXs, newYs = augmentData_Noise(newXs, newYs, labels = [1])
+	newXs, newYs = augmentData_NoiseSwap(newXs, newYs, labels = [3])
 	analyzeTrainData(newXs, newYs)
-	newXs, newYs = augmentData(newXs, newYs, labels = [1, 3, 4])
+	newXs, newYs = balanceData(newXs, newYs)
 	analyzeTrainData(newXs, newYs)
 	trainLoader, testLoader = TrainTestLoader(newXs, newYs, 0.1)
 
@@ -35,7 +37,7 @@ if __name__ == "__main__":
 	lr = 1e-4
 	optimizer = optim.Adam(model.parameters(), lr=lr)
 	scheduler = lr_scheduler.StepLR(optimizer, 16, gamma=0.1, last_epoch=-1)
-	n_epochs = 0
+	n_epochs = 35
 	log_batch = 200
 	llos = []
 	lacc = []
@@ -72,6 +74,7 @@ if __name__ == "__main__":
 				running_loss = 0.0
 		mean_loss = total_loss / len(trainLoader)
 		llos.append(mean_loss)
+		scheduler.step()
 		counter = 0
 		for idx, data in enumerate(testLoader):
 			xx, yy = data
