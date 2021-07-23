@@ -1,10 +1,6 @@
 /LeaderboardSleep/
 /SleepSource/
 answer.txt
-<<<<<<< HEAD
-/__pycache__/
 .DS_Store
-=======
 **/__pycache__/
 **/.ipynb_checkpoints/
->>>>>>> master
