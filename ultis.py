@@ -33,7 +33,7 @@ def getData():
 			y_source.append(pickle.load(f))
 	X_source = np.concatenate(X_source)
 	y_source = np.concatenate(y_source)
-	print("Source: there are {} trials with {} time samples and {} electrodes ".format(*X_source.shape))
+	# print("Source: there are {} trials with {} time samples and {} electrodes ".format(*X_source.shape))
 	return X_source, y_source
 
 
@@ -69,8 +69,9 @@ def balanceData(Xs, ys):
 	marker[randomRemove2] = 0
 
 	label0 = np.where(ys == 0)[0]
-	randomRemove1 = np.random.choice(label0, int(len(label0) / 2), replace = False)
-	marker[randomRemove1] = 0
+	randomRemove0 = np.random.choice(label0, int(len(label0) / 2), replace = False)
+	marker[randomRemove0] = 0
+
 
 	newX_source = Xs[np.where(marker == 1)]
 	newy_source = ys[np.where(marker == 1)]
@@ -84,7 +85,7 @@ class EEG_data(Dataset):
 		mean = np.mean(datas, axis=1, keepdims=True)
 		std = np.std(datas, axis=1, keepdims=True)
 		self.X = (datas - mean) / std
-		self.X = np.abs(self.X).astype(np.double)*1e3
+		self.X = self.X.astype(np.double)*1e3
 		self.transform = transforms
 
 	def __len__(self):
@@ -204,7 +205,7 @@ def addNoise(data, target):
     for idx in range(len(data)):
         tmpTarget = [0]*12
         matrix = np.copy(data[idx])
-        noise = np.random.normal(0, 0.05, size= matrix.shape)
+        noise = np.random.normal(0, 0.1, size= matrix.shape)
         newmatrix = matrix + noise
         newmatrix = newmatrix.astype(np.double)
         list_newdata.append(newmatrix)
@@ -217,76 +218,96 @@ def randomRemoveSample(data, target):
     list_newtarget = []
     for idx in range(len(data)):
         matrix = np.copy(data[idx])
-        numRandom = 300
+        numRandom = 500
         listFrame = []
         for id in range(numRandom):
           tmp = np.random.randint(1,matrix.shape[0])
           listFrame.append(tmp)
         for f in listFrame:
-          if f > 1 and f < 126:
+          if f > 1 and f < 2999:
             matrix[f] = matrix[f-1] + matrix[f+1] / 2
         # print(matrix.shape)
         list_newdata.append(matrix)
         list_newtarget.append(target[idx])
     return list_newdata, list_newtarget
 
-# def randomSwapSample(data, target):
-#     list_newdata = []
-#     list_newtarget = []
-#     for idx in range(len(data)):
-#         matrix = np.copy(data[idx])
-#         numRandom = 8
-#         listFrame = []
-#         for id in range(numRandom):
-#             tmp = np.random.randint(1,128)
-#             listFrame.append(tmp)
-#         listFrame = np.sort(listFrame)
-#         for idy, v in  enumerate(listFrame):
-#             if idy > 0 and listFrame[idy] < listFrame[idy-1]:
-#                 listFrame[idy] += 1
+def randomSwapSample(data, target):
+    list_newdata = []
+    list_newtarget = []
+    for idx in range(len(data)):
+        matrix = np.copy(data[idx])
+        numRandom = 8
+        listFrame = []
+        for id in range(numRandom):
+            tmp = np.random.randint(3,2990)
+            listFrame.append(tmp)
+        listFrame = np.sort(listFrame)
+        for idy, v in  enumerate(listFrame):
+            if idy > 0 and listFrame[idy] < listFrame[idy-1]:
+                listFrame[idy] += 1
 
-#         list_Matrix = []
-#         for x in range(4):
-#             l = x * 2
-#             r = x * 2 + 1
-#             dl = listFrame[l]
-#             dr = listFrame[r]
-#             tmpMatrix = np.copy(matrix[dl:dr])
-#             list_Matrix.append(tmpMatrix)
-#         swapMatrix = []
-#         arr = np.arange(4)
-#         np.random.shuffle(arr)
-#         for x in range(4):
-#             swapMatrix.append(np.copy(list_Matrix[arr[x]]))
-
-
-#         listFrame = np.insert(listFrame, 0, 0)
-#         listFrame = np.append(listFrame ,127)
-#         list_Matrix = []
-#         for x in range(5):
-#             l = x * 2
-#             r = x * 2 + 1
-#             dl = listFrame[l]
-#             dr = listFrame[r]
-#             tmpMatrix = np.copy(matrix[dl:dr])
-#             list_Matrix.append(tmpMatrix)
+        list_Matrix = []
+        for x in range(4):
+            l = x * 2
+            r = x * 2 + 1
+            dl = listFrame[l]
+            dr = listFrame[r]
+            tmpMatrix = np.copy(matrix[dl:dr])
+            list_Matrix.append(tmpMatrix)
+        swapMatrix = []
+        arr = np.arange(4)
+        np.random.shuffle(arr)
+        for x in range(4):
+            swapMatrix.append(np.copy(list_Matrix[arr[x]]))
 
 
-#         finalList = []
-#         for x in range(4):
-#             finalList.append(list_Matrix[x])
-#             finalList.append(swapMatrix[x])
-#         finalList.append(list_Matrix[-1])
+        listFrame = np.insert(listFrame, 0, 0)
+        listFrame = np.append(listFrame, 3000)
+        list_Matrix = []
+        for x in range(5):
+            l = x * 2
+            r = x * 2 + 1
+            dl = listFrame[l]
+            dr = listFrame[r]
+            tmpMatrix = np.copy(matrix[dl:dr])
+            list_Matrix.append(tmpMatrix)
 
-#         finalMatrix = np.vstack(finalList)
-#         # print(finalMatrix.shape)
-#         # if finalMatrix.shape[0] == 128:
-#         #   print(listFrame)
-#         list_newdata.append(finalMatrix)
-#         list_newtarget.append(target[idx])
-#     return list_newdata, list_newtarget
+
+        finalList = []
+        for x in range(4):
+            finalList.append(list_Matrix[x])
+            finalList.append(swapMatrix[x])
+        finalList.append(list_Matrix[-1])
+
+        finalMatrix = np.vstack(finalList)
+        # print(finalMatrix.shape)
+        # if finalMatrix.shape[0] == 3000:
+        # 	print(listFrame)
+        # 	stop
+        list_newdata.append(finalMatrix)
+        list_newtarget.append(target[idx])
+    return list_newdata, list_newtarget
 
 def augmentData(Xs, Ys, labels):
+	newXs = []
+	newYs = []
+	for label in labels:
+		X_source = Xs[np.where(Ys == label)]
+		y_source = Ys[np.where(Ys == label)]
+		datanoise, targetnoise = addNoise(X_source, y_source)
+		dataRemove, targetRemove = randomRemoveSample(X_source, y_source)
+		dataSwap, targetSwap = randomSwapSample(X_source, y_source)
+		newXs.extend(datanoise)
+		newXs.extend(dataRemove)
+		newXs.extend(dataSwap)
+		newYs.extend(targetnoise)
+		newYs.extend(targetRemove)
+		newYs.extend(targetSwap)
+	newXs.extend(Xs)
+	newYs.extend(Ys)
+	return np.asarray(newXs), np.asarray(newYs)
+
+def augmentData_NoiseSwap(Xs, Ys, labels):
 	newXs = []
 	newYs = []
 	for label in labels:
@@ -298,6 +319,19 @@ def augmentData(Xs, Ys, labels):
 		newXs.extend(dataRemove)
 		newYs.extend(targetnoise)
 		newYs.extend(targetRemove)
+	newXs.extend(Xs)
+	newYs.extend(Ys)
+	return np.asarray(newXs), np.asarray(newYs)
+
+def augmentData_Noise(Xs, Ys, labels):
+	newXs = []
+	newYs = []
+	for label in labels:
+		X_source = Xs[np.where(Ys == label)]
+		y_source = Ys[np.where(Ys == label)]
+		datanoise, targetnoise = addNoise(X_source, y_source)
+		newXs.extend(datanoise)
+		newYs.extend(targetnoise)
 	newXs.extend(Xs)
 	newYs.extend(Ys)
 	return np.asarray(newXs), np.asarray(newYs)
