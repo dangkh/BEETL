@@ -24,7 +24,7 @@ if __name__ == "__main__":
 	analyzeTrainData(newXs, newYs)
 	newXs, newYs = balanceData(newXs, newYs)
 	analyzeTrainData(newXs, newYs)
-	trainLoader, testLoader = TrainTestLoader(newXs, newYs, 0.1)
+	trainLoader, testLoader = TrainTestLoader([newXs, newYs], 0.1)
 
 	# train model
 
