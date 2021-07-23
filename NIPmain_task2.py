@@ -139,4 +139,4 @@ print('Test Acc: {:1f}%'.format(100 * counter / total))
 plot_confusion_matrix(trueLabel, preds, classes=['0', '1', '2'], 
                                       normalize=True, title='Validation confusion matrix')
 
-
+torch.save(model.state_dict(), "model_state_dict_task2.pt")
