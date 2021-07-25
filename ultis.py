@@ -380,10 +380,10 @@ def trainData_task2(ds_src1, ds_src2, ds_tgt, prgm_2classes, prgm_4classes):
 	return X_train, y_train, X_val, y_val
 
 def tranferData_task2(ds_src1, ds_src2, ds_tgt, prgm_2classes, prgm_4classes):
-	s1 = [9, 10]
+	s1 = [9, 10, 11, 12, 13]
 	X_src1, label_src1, m_src1 = prgm_2classes.get_data(dataset=ds_src1 , subjects= s1)
 	X_src1 = np.transpose(X_src1, (0, 2, 1))
-	s2 = [9, 10]
+	s2 = [9, 10, 11, 12, 13]
 	X_src2, label_src2, m_src2 = prgm_4classes.get_data(dataset=ds_src2, subjects= s2)
 	X_src2 = np.transpose(X_src2, (0, 2, 1))
 	s3 = [9]
