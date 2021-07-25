@@ -15,10 +15,10 @@ from torch.optim import lr_scheduler
 from nets import *
 
 
-X_train, y_train, X_val, y_val, XA, XB = getData_task2()
+X_train, y_train, X_val, y_val, Xs, ys, XA, XB = getData_task2()
 analyzeTrainData(X_train, y_train)
 analyzeTrainData(X_val, y_val)
-trainLoader, validLoader = TrainTestLoader(X_train, y_train, X_val, y_val)
+trainLoader, validLoader = TrainTestLoader([X_train, y_train, X_val, y_val])
 model = LSTMNet_t2(n_classes=3)
 model.double()
 if torch.cuda.is_available():
@@ -27,7 +27,7 @@ criterion = nn.CrossEntropyLoss()
 lr = 1e-4
 optimizer = optim.Adam(model.parameters(), lr=lr)
 scheduler = lr_scheduler.StepLR(optimizer, 16, gamma=0.1, last_epoch=-1)
-n_epochs = 200
+n_epochs = 300
 log_batch = 50
 llos = []
 lacc = []
@@ -134,7 +134,7 @@ for idx, data in enumerate(validLoader):
         if ypred == yy[id].item():
           counter += 1
 # print(counter / total, counter, total)    
-print('Test Acc: {:1f}%'.format(100 * counter / total))
+print('Valid Acc: {:1f}%'.format(100 * counter / total))
 
 plot_confusion_matrix(trueLabel, preds, classes=['0', '1', '2'], 
                                       normalize=True, title='Validation confusion matrix')

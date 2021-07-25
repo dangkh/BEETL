@@ -104,7 +104,7 @@ def TrainTestLoader(data, testSize = 0.1):
 	if len(data) == 2:
 		X_train, X_test, y_train, y_test = train_test_split(data[0], data[1], test_size=testSize, random_state=42)
 	else:
-		[X_train, X_test, y_train, y_test] = data
+		[X_train, y_train, X_test, y_test] = data
 	batch_size = 32
 
 	train_dataset = EEG_data(X_train, y_train)
@@ -119,10 +119,10 @@ def TrainTestLoader(data, testSize = 0.1):
 
 
 def plotLossAcc(loss, acc):
-	t = [x for x in range(len(llos))]
-	plt.plot(t, llos, 'red')
-	t = [x for x in range(len(lacc))]
-	plt.plot(t, lacc, 'blue')
+	t = [x for x in range(len(loss))]
+	plt.plot(t, loss, 'red')
+	t = [x for x in range(len(acc))]
+	plt.plot(t, acc, 'blue')
 	plt.show()
 
 def plot_confusion_matrix(y_true, y_pred, classes,
@@ -177,6 +177,7 @@ def plot_confusion_matrix(y_true, y_pred, classes,
 					ha="center", va="center",
 					color="white" if cm[i, j] > thresh else "black")
 	fig.tight_layout()
+	plt.show()
 	return ax
 
 def chunk(matrix, step_size = 128, window_size = 128):
@@ -348,7 +349,7 @@ def relabel(l):
 	elif l == 'right_hand': return 1
 	else: return 2
 
-def trainData_task2():
+def trainData_task2(ds_src1, ds_src2, ds_tgt, prgm_2classes, prgm_4classes):
 	mysubjects = [x+1 for x in range(8)]
 	X_src1, label_src1, m_src1 = prgm_2classes.get_data(dataset=ds_src1 , subjects= mysubjects)
 	X_src1 = np.transpose(X_src1, (0, 2, 1))
@@ -365,7 +366,7 @@ def trainData_task2():
 	y_src2 = np.array([relabel(l) for l in label_src2])
 	y_tgt = np.array([relabel(l) for l in label_tgt])
 
-	window_size = min(X_src1.shape[1], X_src2.shape[1], X_tgt.shape[1])
+	window_size = 300
 
 	X_train = np.concatenate((X_src1[:, :window_size, :], X_src2[:, :window_size, :], X_tgt[:-100, :window_size, :]))
 	y_train = np.concatenate((y_src1, y_src2, y_tgt[:-100]))
@@ -378,7 +379,7 @@ def trainData_task2():
 	print("\nValidation: there are {} trials with {} time samples and {} electrodes".format(*X_val.shape))
 	return X_train, y_train, X_val, y_val
 
-def tranferData_task2():
+def tranferData_task2(ds_src1, ds_src2, ds_tgt, prgm_2classes, prgm_4classes):
 	s1 = [9, 10]
 	X_src1, label_src1, m_src1 = prgm_2classes.get_data(dataset=ds_src1 , subjects= s1)
 	X_src1 = np.transpose(X_src1, (0, 2, 1))
@@ -397,8 +398,7 @@ def tranferData_task2():
 	y_src2 = np.array([relabel(l) for l in label_src2])
 	y_tgt = np.array([relabel(l) for l in label_tgt])
 
-	window_size = min(X_src1.shape[1], X_src2.shape[1], X_tgt.shape[1])
-
+	window_size = 300
 	Xs = np.concatenate((X_src1[:, :window_size, :], X_src2[:, :window_size, :], X_tgt[:, :window_size, :]))
 	ys = np.concatenate((y_src1, y_src2, y_tgt))
 
@@ -406,7 +406,7 @@ def tranferData_task2():
 	return Xs, ys
 
 def loadTarget_task2():
-	_, _,  = BeetlMILeaderboard().get_data(dataset='A')
+	_, _, X_MIA_test  = BeetlMILeaderboard().get_data(dataset='A')
 	print ("MI leaderboard A: There are {} trials with {} electrodes and {} time samples".format(*X_MIA_test.shape))
 	_, _, X_MIB_test = BeetlMILeaderboard().get_data(dataset='B')
 	print ("MI leaderboard B: There are {} trials with {} electrodes and {} time samples".format(*X_MIB_test.shape))
@@ -421,12 +421,13 @@ def getData_task2():
 	raw = ds_tgt.get_data(subjects=[1])[1]['session_T']['run_1']
 	tgt_channels = raw.pick_types(eeg=True).ch_names
 
-	print("list channels will be extracted: {}".format(tgt_channels)
-	sfreq = 250.
+	print("list channels will be extracted: {}".format(tgt_channels))
+	tgt_channels = ['Fz', 'FC1', 'FC2', 'C5', 'C3', 'C1', 'C2', 'C4', 'C6', 'CP3', 'CP1', 'CPz', 'CP2', 'CP4', 'P1', 'Pz', 'P2']
+	sfreq = 100
 	prgm_2classes = MotorImagery(n_classes=2, channels=tgt_channels, resample=sfreq, fmin=fmin, fmax=fmax)
 	prgm_4classes = MotorImagery(n_classes=4, channels=tgt_channels, resample=sfreq, fmin=fmin, fmax=fmax)
-	X_train, y_train, X_val, y_val = trainData_task2()
-	Xs, ys = tranferData_task2()
+	X_train, y_train, X_val, y_val = trainData_task2(ds_src1, ds_src2, ds_tgt, prgm_2classes, prgm_4classes)
+	Xs, ys = tranferData_task2(ds_src1, ds_src2, ds_tgt, prgm_2classes, prgm_4classes)
 	XA, XB = loadTarget_task2()
-
+	return X_train, y_train, X_val, y_val, Xs, ys, XA, XB
 
