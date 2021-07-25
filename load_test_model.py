@@ -14,7 +14,7 @@ from nets import *
 
 newModel = LSTMNet_t2(n_classes=3)
 newModel.double()
-newModel.load_state_dict(torch.load("model_state_dict_task2.pt"))
+newModel.load_state_dict(torch.load("model_state_dict_task2_transfered.pt"))
 if torch.cuda.is_available():
   newModel.cuda()
 

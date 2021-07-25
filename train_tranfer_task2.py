@@ -1,4 +1,5 @@
 
+
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -12,24 +13,38 @@ from torch.optim import lr_scheduler
 from nets import *
 
 
-X_train, y_train, X_val, y_val, Xs, ys, XA, XB = getData_task2()
-analyzeTrainData(X_train, y_train)
-analyzeTrainData(X_val, y_val)
-trainLoader, validLoader = TrainTestLoader([X_train, y_train, X_val, y_val])
-model = LSTMNet_t2(n_classes=3)
-model.double()
+with open('trainfile.npy', 'rb') as f:
+    trainfile = np.load(f)
+print(trainfile.shape)
+with open('./y_train_tranfer.npy', 'rb') as f:
+    y_train_tranfer = np.load(f)
+print(y_train_tranfer.shape)
+analyzeTrainData(trainfile, y_train_tranfer)
+augmentData((trainfile, y_train_tranfer, labels = [0, 1, 2]
+trainLoader, validLoader = TrainTestLoader([trainfile, y_train_tranfer], 0.1)
+
+newModel = LSTMNet_t2(n_classes=3)
+newModel.double()
+newModel.load_state_dict(torch.load("model_state_dict_task2_finetuned.pt"))
 if torch.cuda.is_available():
-  model.cuda()
+	newModel.cuda()
+
+for param in newModel.parameters():
+	param.requires_grad = False
+newModel.fc.weight.requires_grad = True
+newModel.fc.bias.requires_grad = True
+
+
 criterion = nn.CrossEntropyLoss()
 lr = 1e-4
-optimizer = optim.Adam(model.parameters(), lr=lr)
+optimizer = optim.Adam(newModel.parameters(), lr=lr)
 scheduler = lr_scheduler.StepLR(optimizer, 16, gamma=0.1, last_epoch=-1)
-n_epochs = 300
+n_epochs = 30
 log_batch = 50
 llos = []
 lacc = []
 for epoch in range(n_epochs):  # loop over the dataset multiple times
-    model.train()
+    newModel.train()
     print("epoch:     ", epoch)
     running_loss = 0.0
     total_loss = 0
@@ -45,7 +60,7 @@ for epoch in range(n_epochs):  # loop over the dataset multiple times
         optimizer.zero_grad()
 
         # forward + backward + optimize
-        outputs = model(inputs)
+        outputs = newModel(inputs)
         loss = criterion(outputs, labels)
         loss.backward()
         optimizer.step()
@@ -66,8 +81,8 @@ for epoch in range(n_epochs):  # loop over the dataset multiple times
         xx = xx.cuda()
         yy = yy.cuda()
       with torch.no_grad():
-          model.eval()
-          pred = model(xx)
+          newModel.eval()
+          pred = newModel(xx)
           res = torch.argmax(pred, 1)
           for i, ypred in  enumerate(res):
             if ypred == yy[i].item():
@@ -90,8 +105,8 @@ for idx, data in enumerate(trainLoader):
   if torch.cuda.is_available():
     xx = xx.cuda()
   with torch.no_grad():
-      model.eval()
-      pred = model(xx)
+      newModel.eval()
+      pred = newModel(xx)
       res = torch.argmax(pred, 1)
       if torch.cuda.is_available():
           res = res.cpu()
@@ -136,4 +151,4 @@ print('Valid Acc: {:1f}%'.format(100 * counter / total))
 plot_confusion_matrix(trueLabel, preds, classes=['0', '1', '2'], 
                                       normalize=True, title='Validation confusion matrix')
 
-torch.save(model.state_dict(), "model_state_dict_task2.pt")
+torch.save(model.state_dict(), "model_state_dict_task2_transfered.pt")
