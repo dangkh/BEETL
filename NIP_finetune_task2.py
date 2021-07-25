@@ -1,6 +1,4 @@
-!pip install mne
-!pip install moabb
-!pip install git+https://github.com/sylvchev/beetl-competition
+
 
 import numpy as np
 import matplotlib.pyplot as plt
