@@ -430,4 +430,3 @@ def getData_task2():
 	Xs, ys = tranferData_task2(ds_src1, ds_src2, ds_tgt, prgm_2classes, prgm_4classes)
 	XA, XB = loadTarget_task2()
 	return X_train, y_train, X_val, y_val, Xs, ys, XA, XB
-
