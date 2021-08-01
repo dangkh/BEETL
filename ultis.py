@@ -12,16 +12,16 @@ from moabb.paradigms import MotorImagery
 from beetl.task_datasets import BeetlSleepLeaderboard, BeetlMILeaderboard
 
 
-def infoData():
+def infoSleepData():
 	with open("./SleepSource/headerInfo.npy", 'rb') as f:
 		info = pickle.load(f)
 	print(info)
 
 
-def getData():
+def getSleepData(numSubject = 38):
 	X_source, y_source = [], []
 	savebase = "./SleepSource/"
-	for i_train in range(38):
+	for i_train in range(numSubject):
 		with open(osp.join(savebase, "training_s{}r1X.npy".format(i_train)), 'rb') as f:
 			subData = pickle.load(f)
 			subData = np.transpose(subData, (0, 2, 1))
@@ -36,11 +36,11 @@ def getData():
 			y_source.append(pickle.load(f))
 	X_source = np.concatenate(X_source)
 	y_source = np.concatenate(y_source)
-	# print("Source: there are {} trials with {} time samples and {} electrodes ".format(*X_source.shape))
+	print("Source: there are {} trials with {} time samples and {} electrodes ".format(*X_source.shape))
 	return X_source, y_source
 
 
-def getTargetData():
+def getSleepTestData():
 	X_source= []
 	savebase = "./LeaderboardSleep/testing/"
 	for i_train in range(6, 18):
@@ -56,16 +56,18 @@ def getTargetData():
 	print("Source: there are {} trials with {} time samples {} electrodes ".format(*X_source.shape))
 	return X_source
 
-def analyzeTrainData(Xs, Ys):
-	print("Shape of train data X_source", Xs.shape)
+def dataDistribution(Ys):
+	# plot bar chart the number sample for each label
 	(unique, counts) = np.unique(np.asarray(Ys), return_counts=True)
 	frequencies = np.asarray((unique, counts)).T
 	print(frequencies)
-	plt.title("chart number of sample for each label")
+	plt.title("Bar chart number sample for each label")
 	plt.bar(unique, counts)
 	plt.show()
 
 def balanceData(Xs, ys):
+	# trim data
+	# TODO 
 	marker = np.ones([len(ys)])
 	label2 = np.where(ys == 2)[0]
 	randomRemove2 = np.random.choice(label2, int(len(label2) * 2 / 3 ), replace = False)
@@ -88,7 +90,7 @@ class EEG_data(Dataset):
 		mean = np.mean(datas, axis=1, keepdims=True)
 		std = np.std(datas, axis=1, keepdims=True)
 		self.X = (datas - mean) / std
-		self.X = self.X.astype(np.double)*1e3
+		self.X = self.X.astype(np.double)
 		self.transform = transforms
 
 	def __len__(self):
@@ -181,119 +183,118 @@ def plot_confusion_matrix(y_true, y_pred, classes,
 	return ax
 
 def chunk(matrix, step_size = 128, window_size = 128):
-    list_matrix = []
-    l, r = 0, window_size - 1
-    while r <= matrix.shape[0]:
-        subMatrix = np.copy(matrix[l:r])
-        list_matrix.append(subMatrix)
-        l += step_size
-        r += step_size
-    l, r = matrix.shape[0] - window_size, matrix.shape[0] - 1
-    subMatrix = np.abs(np.copy(matrix[l:r]))
-    subMatrix = subMatrix.astype(np.double)
-    list_matrix.append(subMatrix)
-    return list_matrix
+	list_matrix = []
+	l, r = 0, window_size - 1
+	while r <= matrix.shape[0]:
+		subMatrix = np.copy(matrix[l:r])
+		list_matrix.append(subMatrix)
+		l += step_size
+		r += step_size
+	l, r = matrix.shape[0] - window_size, matrix.shape[0] - 1
+	subMatrix = np.abs(np.copy(matrix[l:r]))
+	subMatrix = subMatrix.astype(np.double)
+	list_matrix.append(subMatrix)
+	return list_matrix
 
 
 def chunk_matrix(list_data, list_target, step_size = 32, window_size = 128):
-    list_matries = []
-    list_ys = []
-    for idx, matrix in enumerate(list_data):
-        matries = chunk(matrix)
-        list_matries.extend(matries)
-        y_matries = [list_target[idx].astype(int)] * len(matries)
-        list_ys.extend(y_matries)
+	list_matries = []
+	list_ys = []
+	for idx, matrix in enumerate(list_data):
+		matries = chunk(matrix)
+		list_matries.extend(matries)
+		y_matries = [list_target[idx].astype(int)] * len(matries)
+		list_ys.extend(y_matries)
 
-    return list_matries, list_ys
+	return list_matries, list_ys
 
 def addNoise(data, target):
-    list_newdata = []
-    list_newtarget = []
-    for idx in range(len(data)):
-        tmpTarget = [0]*12
-        matrix = np.copy(data[idx])
-        noise = np.random.normal(0, 0.1, size= matrix.shape)
-        newmatrix = matrix + noise
-        newmatrix = newmatrix.astype(np.double)
-        list_newdata.append(newmatrix)
-        # tmpTarget[target[idx]] = 1
-        list_newtarget.append(target[idx])
-    return list_newdata, list_newtarget
+	list_newdata = []
+	list_newtarget = []
+	for idx in range(len(data)):
+		tmpTarget = [0]*12
+		matrix = np.copy(data[idx])
+		noise = np.random.normal(0, 0.1, size= matrix.shape)
+		newmatrix = matrix + noise
+		newmatrix = newmatrix.astype(np.double)
+		list_newdata.append(newmatrix)
+		# tmpTarget[target[idx]] = 1
+		list_newtarget.append(target[idx])
+	return list_newdata, list_newtarget
 
 def randomRemoveSample(data, target):
-    list_newdata = []
-    list_newtarget = []
-    for idx in range(len(data)):
-        matrix = np.copy(data[idx])
-        numRandom = 500
-        listFrame = []
-        for id in range(numRandom):
-          tmp = np.random.randint(1,matrix.shape[0])
-          listFrame.append(tmp)
-        for f in listFrame:
-          if f > 1 and f < 2999:
-            matrix[f] = matrix[f-1] + matrix[f+1] / 2
-        # print(matrix.shape)
-        list_newdata.append(matrix)
-        list_newtarget.append(target[idx])
-    return list_newdata, list_newtarget
+	list_newdata = []
+	list_newtarget = []
+	for idx in range(len(data)):
+		matrix = np.copy(data[idx])
+		lenRandom = matrix.shape[0]
+		numRandom = int(lenRandom / 10)
+		listFrame = []
+		for id in range(numRandom):
+			tmp = np.random.randint(1,matrix.shape[0])
+			listFrame.append(tmp)
+		for f in listFrame:
+			if f > 1 and f < lenRandom - 1:
+				matrix[f] = matrix[f-1] + matrix[f+1] / 2
+		# print(matrix.shape)
+		list_newdata.append(matrix)
+		list_newtarget.append(target[idx])
+	return list_newdata, list_newtarget
 
 def randomSwapSample(data, target):
-    list_newdata = []
-    list_newtarget = []
-    for idx in range(len(data)):
-        matrix = np.copy(data[idx])
-        numRandom = 8
-        listFrame = []
-        for id in range(numRandom):
-            tmp = np.random.randint(3,2990)
-            listFrame.append(tmp)
-        listFrame = np.sort(listFrame)
-        for idy, v in  enumerate(listFrame):
-            if idy > 0 and listFrame[idy] < listFrame[idy-1]:
-                listFrame[idy] += 1
+	list_newdata = []
+	list_newtarget = []
+	for idx in range(len(data)):
+		matrix = np.copy(data[idx])
+		lenRandom = matrix.shape[0]
+		numRandom = 8
+		listFrame = []
+		for id in range(numRandom):
+			tmp = np.random.randint(3,lenRandom-10)
+			listFrame.append(tmp)
+		listFrame = np.sort(listFrame)
+		for idy, v in  enumerate(listFrame):
+			if idy > 0 and listFrame[idy] < listFrame[idy-1]:
+				listFrame[idy] += 1
 
-        list_Matrix = []
-        for x in range(4):
-            l = x * 2
-            r = x * 2 + 1
-            dl = listFrame[l]
-            dr = listFrame[r]
-            tmpMatrix = np.copy(matrix[dl:dr])
-            list_Matrix.append(tmpMatrix)
-        swapMatrix = []
-        arr = np.arange(4)
-        np.random.shuffle(arr)
-        for x in range(4):
-            swapMatrix.append(np.copy(list_Matrix[arr[x]]))
-
-
-        listFrame = np.insert(listFrame, 0, 0)
-        listFrame = np.append(listFrame, 3000)
-        list_Matrix = []
-        for x in range(5):
-            l = x * 2
-            r = x * 2 + 1
-            dl = listFrame[l]
-            dr = listFrame[r]
-            tmpMatrix = np.copy(matrix[dl:dr])
-            list_Matrix.append(tmpMatrix)
+		list_Matrix = []
+		for x in range(4):
+			l = x * 2
+			r = x * 2 + 1
+			dl = listFrame[l]
+			dr = listFrame[r]
+			tmpMatrix = np.copy(matrix[dl:dr])
+			list_Matrix.append(tmpMatrix)
+		swapMatrix = []
+		arr = np.arange(4)
+		np.random.shuffle(arr)
+		for x in range(4):
+			swapMatrix.append(np.copy(list_Matrix[arr[x]]))
 
 
-        finalList = []
-        for x in range(4):
-            finalList.append(list_Matrix[x])
-            finalList.append(swapMatrix[x])
-        finalList.append(list_Matrix[-1])
+		listFrame = np.insert(listFrame, 0, 0)
+		listFrame = np.append(listFrame, lenRandom)
+		list_Matrix = []
+		for x in range(5):
+			l = x * 2
+			r = x * 2 + 1
+			dl = listFrame[l]
+			dr = listFrame[r]
+			tmpMatrix = np.copy(matrix[dl:dr])
+			list_Matrix.append(tmpMatrix)
 
-        finalMatrix = np.vstack(finalList)
-        # print(finalMatrix.shape)
-        # if finalMatrix.shape[0] == 3000:
-        # 	print(listFrame)
-        # 	stop
-        list_newdata.append(finalMatrix)
-        list_newtarget.append(target[idx])
-    return list_newdata, list_newtarget
+
+		finalList = []
+		for x in range(4):
+			finalList.append(list_Matrix[x])
+			finalList.append(swapMatrix[x])
+		finalList.append(list_Matrix[-1])
+
+		finalMatrix = np.vstack(finalList)
+		
+		list_newdata.append(finalMatrix)
+		list_newtarget.append(target[idx])
+	return list_newdata, list_newtarget
 
 def augmentData(Xs, Ys, labels):
 	newXs = []
@@ -351,9 +352,11 @@ def relabel(l):
 
 def trainData_task2(ds_src1, ds_src2, ds_tgt, prgm_2classes, prgm_4classes):
 	mysubjects = [x+1 for x in range(8)]
-	X_src1, label_src1, m_src1 = prgm_2classes.get_data(dataset=ds_src1 , subjects= mysubjects)
+	ss = [x for x in range(20, 32)]
+	ss.extend(mysubjects)
+	X_src1, label_src1, m_src1 = prgm_2classes.get_data(dataset=ds_src1 , subjects= ss)
 	X_src1 = np.transpose(X_src1, (0, 2, 1))
-	X_src2, label_src2, m_src2 = prgm_4classes.get_data(dataset=ds_src2, subjects= mysubjects)
+	X_src2, label_src2, m_src2 = prgm_4classes.get_data(dataset=ds_src2, subjects= ss)
 	X_src2 = np.transpose(X_src2, (0, 2, 1))
 	X_tgt, label_tgt, m_tgt = prgm_4classes.get_data(dataset=ds_tgt, subjects=mysubjects)
 	X_tgt = np.transpose(X_tgt, (0, 2, 1))
@@ -380,10 +383,10 @@ def trainData_task2(ds_src1, ds_src2, ds_tgt, prgm_2classes, prgm_4classes):
 	return X_train, y_train, X_val, y_val
 
 def tranferData_task2(ds_src1, ds_src2, ds_tgt, prgm_2classes, prgm_4classes):
-	s1 = [9, 10, 11, 12, 13]
+	s1 = [9, 10, 11, 12, 13, 15, 16, 17, 18, 19]
 	X_src1, label_src1, m_src1 = prgm_2classes.get_data(dataset=ds_src1 , subjects= s1)
 	X_src1 = np.transpose(X_src1, (0, 2, 1))
-	s2 = [9, 10, 11, 12, 13]
+	s2 = [9, 10, 11, 12, 13, 15, 16, 17, 18, 19]
 	X_src2, label_src2, m_src2 = prgm_4classes.get_data(dataset=ds_src2, subjects= s2)
 	X_src2 = np.transpose(X_src2, (0, 2, 1))
 	s3 = [9]
