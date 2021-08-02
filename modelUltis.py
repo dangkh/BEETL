@@ -39,7 +39,7 @@ def trainModel(model, criterion, n_epochs, optimizer, scheduler, trainLoader, sa
 				# print('[%d, %5d] loss: %.3f' % (epoch + 1, i + 1, running_loss / log_batch))
 				percent = int(i *50/ len(trainLoader))
 				remain = 50 - percent 
-				sys.stdout.write("\r[{0}] {1}% loss: {2: 3f}".format('#'*percent + '-'*remain, percent, running_loss / log_batch))
+				sys.stdout.write("\r[{0}] {1}% loss: {2: 3f}".format('#'*percent + '-'*remain, percent * 2, running_loss / log_batch))
 				sys.stdout.flush()
 				running_loss = 0.0
 		mean_loss = total_loss / len(trainLoader)
@@ -51,7 +51,7 @@ def trainModel(model, criterion, n_epochs, optimizer, scheduler, trainLoader, sa
 
 	return model, llos
 
-def evaluateModel(model, plotConfusion, dataLoader):
+def evaluateModel(model, plotConfusion, dataLoader, n_class):
 	counter = 0
 	total = 0
 	preds = []
@@ -74,8 +74,8 @@ def evaluateModel(model, plotConfusion, dataLoader):
 					counter += 1
 	print('acc: {:1f}%'.format(100 * counter / total))
 	if plotConfusion:
-		plot_confusion_matrix(trueLabel, preds, classes=['0', '1', '2', '3', '4', '5'], 
-										  normalize=True, title='Validation confusion matrix')
+		plotCl = [str(x) for x in range(n_class)]
+		plot_confusion_matrix(trueLabel, preds, classes= plotCl, normalize=True, title='Validation confusion matrix')
 		plt.show()
 
 def testModel(model, dataLoader ):
