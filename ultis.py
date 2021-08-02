@@ -56,12 +56,12 @@ def getSleepTestData():
 	print("Source: there are {} trials with {} time samples {} electrodes ".format(*X_source.shape))
 	return X_source
 
-def dataDistribution(Ys):
+def dataDistribution(Ys, titleData = ""):
 	# plot bar chart the number sample for each label
 	(unique, counts) = np.unique(np.asarray(Ys), return_counts=True)
 	frequencies = np.asarray((unique, counts)).T
 	print(frequencies)
-	plt.title("Bar chart number sample for each label")
+	plt.title("Bar chart number sample for each label" + titleData)
 	plt.bar(unique, counts)
 	plt.show()
 
@@ -350,8 +350,8 @@ def relabel(l):
 	elif l == 'right_hand': return 1
 	else: return 2
 
-def trainData_task2(ds_src1, ds_src2, ds_tgt, prgm_2classes, prgm_4classes):
-	mysubjects = [x+1 for x in range(8)]
+def trainMIData(ds_src1, ds_src2, ds_tgt, prgm_2classes, prgm_4classes):
+	mysubjects = [x+1 for x in range(9)]
 	ss = [x for x in range(20, 32)]
 	ss.extend(mysubjects)
 	X_src1, label_src1, m_src1 = prgm_2classes.get_data(dataset=ds_src1 , subjects= ss)
@@ -415,7 +415,7 @@ def loadTarget_task2():
 	print ("MI leaderboard B: There are {} trials with {} electrodes and {} time samples".format(*X_MIB_test.shape))
 	return X_MIA_test, X_MIB_test
 
-def getData_task2():
+def getMIData():
 	ds_src1 = Cho2017()
 	ds_src2 = PhysionetMI()
 	ds_tgt = BNCI2014001()
@@ -429,7 +429,11 @@ def getData_task2():
 	sfreq = 100
 	prgm_2classes = MotorImagery(n_classes=2, channels=tgt_channels, resample=sfreq, fmin=fmin, fmax=fmax)
 	prgm_4classes = MotorImagery(n_classes=4, channels=tgt_channels, resample=sfreq, fmin=fmin, fmax=fmax)
-	X_train, y_train, X_val, y_val = trainData_task2(ds_src1, ds_src2, ds_tgt, prgm_2classes, prgm_4classes)
-	Xs, ys = tranferData_task2(ds_src1, ds_src2, ds_tgt, prgm_2classes, prgm_4classes)
-	XA, XB = loadTarget_task2()
-	return X_train, y_train, X_val, y_val, Xs, ys, XA, XB
+	X_train, y_train, X_val, y_val = trainMIData(ds_src1, ds_src2, ds_tgt, prgm_2classes, prgm_4classes)
+	# Xs, ys = tranferData_task2(ds_src1, ds_src2, ds_tgt, prgm_2classes, prgm_4classes)
+	# XA, XB = loadTarget_task2()
+	return X_train, y_train, X_val, y_val
+
+def mergeAnswer(f1, f2):
+	pass
+	
