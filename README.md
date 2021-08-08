@@ -22,3 +22,8 @@ This pipeline construct based on a stardard-few shot learning set up:
 # Task 1: 
 - Train all data set
 - Finetune on 1-2 in 5 provided valid, check in remaining  
+
+# Task 2:
+- Train Phy and BCI dataset
+- Finetune on Cho dataset
+- Finetune last fc layer on datasetA and datasetB

@@ -331,6 +331,19 @@ def augmentData_NoiseSwap(Xs, Ys, labels):
 	newYs.extend(Ys)
 	return np.asarray(newXs), np.asarray(newYs)
 
+def augmentData_Swap(Xs, Ys, labels):
+	newXs = []
+	newYs = []
+	for label in labels:
+		X_source = Xs[np.where(Ys == label)]
+		y_source = Ys[np.where(Ys == label)]
+		dataRemove, targetRemove = randomRemoveSample(X_source, y_source)
+		newXs.extend(dataRemove)
+		newYs.extend(targetRemove)
+	newXs.extend(Xs)
+	newYs.extend(Ys)
+	return np.asarray(newXs), np.asarray(newYs)
+
 def augmentData_Noise(Xs, Ys, labels):
 	newXs = []
 	newYs = []
@@ -352,7 +365,7 @@ def relabel(l):
 
 def trainMIData(ds_src1, ds_src2, ds_tgt, prgm_2classes, prgm_4classes):
 	mysubjects = [x+1 for x in range(9)]
-	ss = [x for x in range(20, 32)]
+	ss = [x for x in range(9, 30)]
 	ss.extend(mysubjects)
 	X_src1, label_src1, m_src1 = prgm_2classes.get_data(dataset=ds_src1 , subjects= ss)
 	X_src1 = np.transpose(X_src1, (0, 2, 1))
@@ -371,16 +384,52 @@ def trainMIData(ds_src1, ds_src2, ds_tgt, prgm_2classes, prgm_4classes):
 
 	window_size = 300
 
-	X_train = np.concatenate((X_src1[:, :window_size, :], X_src2[:, :window_size, :], X_tgt[:-100, :window_size, :]))
-	y_train = np.concatenate((y_src1, y_src2, y_tgt[:-100]))
-
-	X_val = X_tgt[-100:, :window_size, :]
-	y_val = y_tgt[-100:]
-
+	X_train = np.concatenate((X_src1[:, :window_size, :], X_src2[:, :window_size, :], X_tgt[:, :window_size, :]))
+	y_train = np.concatenate((y_src1, y_src2, y_tgt[:]))
 
 	print("Train:  there are {} trials with {} time samples and {} electrodes".format(*X_train.shape))
-	print("\nValidation: there are {} trials with {} time samples and {} electrodes".format(*X_val.shape))
-	return X_train, y_train, X_val, y_val
+	return X_train, y_train
+
+
+def PhyData(ds_src2, ds_tgt, prgm_4classes):
+	mysubjects = [x+1 for x in range(9)]
+	ss = [x for x in range(9, 32)]
+	ss.extend(mysubjects)
+	X_src2, label_src2, m_src2 = prgm_4classes.get_data(dataset=ds_src2, subjects= ss)
+	X_src2 = np.transpose(X_src2, (0, 2, 1))
+	X_tgt, label_tgt, m_tgt = prgm_4classes.get_data(dataset=ds_tgt, subjects=mysubjects)
+	X_tgt = np.transpose(X_tgt, (0, 2, 1))
+
+	print("Second source dataset has {} trials with {} electrodes and {} time samples".format(*X_src2.shape))
+	print("Third source dataset has {} trials with {} electrodes and {} time samples".format(*X_tgt.shape))
+
+	y_src2 = np.array([relabel(l) for l in label_src2])
+	y_tgt = np.array([relabel(l) for l in label_tgt])
+
+	window_size = 300
+
+	X_train = np.concatenate((X_src2[:, :window_size, :], X_tgt[:, :window_size, :]))
+	y_train = np.concatenate((y_src2, y_tgt[:]))
+
+	print("Train:  there are {} trials with {} time samples and {} electrodes".format(*X_train.shape))
+	return X_train, y_train
+
+def ChoData(ds_src1, prgm_2classes):
+	mysubjects = [x+1 for x in range(30)]
+	X_src1, label_src1, m_src1 = prgm_2classes.get_data(dataset=ds_src1 , subjects= mysubjects)
+	X_src1 = np.transpose(X_src1, (0, 2, 1))
+
+	print("First source dataset has {} trials with {} electrodes and {} time samples".format(*X_src1.shape))
+
+	y_src1 = np.array([relabel(l) for l in label_src1])
+
+	window_size = 300
+
+	X_train = np.asarray(X_src1[:, :window_size, :])
+	y_train = np.asarray((y_src1))
+
+	print("Train:  there are {} trials with {} time samples and {} electrodes".format(*X_train.shape))
+	return X_train, y_train
 
 def tranferData_task2(ds_src1, ds_src2, ds_tgt, prgm_2classes, prgm_4classes):
 	s1 = [9, 10, 11, 12, 13, 15, 16, 17, 18, 19]
@@ -421,19 +470,56 @@ def getMIData():
 	ds_tgt = BNCI2014001()
 
 	fmin, fmax = 0, 60
-	raw = ds_tgt.get_data(subjects=[1])[1]['session_T']['run_1']
-	tgt_channels = raw.pick_types(eeg=True).ch_names
+	# raw = ds_tgt.get_data(subjects=[1])[1]['session_T']['run_1']
+	# tgt_channels = raw.pick_types(eeg=True).ch_names
 
-	print("list channels will be extracted: {}".format(tgt_channels))
+	# print("list channels will be extracted: {}".format(tgt_channels))
 	tgt_channels = ['Fz', 'FC1', 'FC2', 'C5', 'C3', 'C1', 'C2', 'C4', 'C6', 'CP3', 'CP1', 'CPz', 'CP2', 'CP4', 'P1', 'Pz', 'P2']
 	sfreq = 100
 	prgm_2classes = MotorImagery(n_classes=2, channels=tgt_channels, resample=sfreq, fmin=fmin, fmax=fmax)
 	prgm_4classes = MotorImagery(n_classes=4, channels=tgt_channels, resample=sfreq, fmin=fmin, fmax=fmax)
-	X_train, y_train, X_val, y_val = trainMIData(ds_src1, ds_src2, ds_tgt, prgm_2classes, prgm_4classes)
-	# Xs, ys = tranferData_task2(ds_src1, ds_src2, ds_tgt, prgm_2classes, prgm_4classes)
-	# XA, XB = loadTarget_task2()
-	return X_train, y_train, X_val, y_val
+	X_train, y_train = trainMIData(ds_src1, ds_src2, ds_tgt, prgm_2classes, prgm_4classes)
+	return X_train, y_train
 
-def mergeAnswer(f1, f2):
-	pass
+def getPhyData():
+	ds_src2 = PhysionetMI()
+	ds_tgt = BNCI2014001()
+
+	fmin, fmax = 0, 60
+	tgt_channels = ['Fz', 'FC1', 'FC2', 'C5', 'C3', 'C1', 'C2', 'C4', 'C6', 'CP3', 'CP1', 'CPz', 'CP2', 'CP4', 'P1', 'Pz', 'P2']
+	sfreq = 100
+	prgm_4classes = MotorImagery(n_classes=4, channels=tgt_channels, resample=sfreq, fmin=fmin, fmax=fmax)
+	X_train, y_train = PhyData(ds_src2, ds_tgt, prgm_4classes)
+	return X_train, y_train
+
+def getChoData():
+	# Cho's dataset comprises only data of 2 labels
+	ds_src1 = Cho2017()
+
+	fmin, fmax = 0, 60
+	tgt_channels = ['Fz', 'FC1', 'FC2', 'C5', 'C3', 'C1', 'C2', 'C4', 'C6', 'CP3', 'CP1', 'CPz', 'CP2', 'CP4', 'P1', 'Pz', 'P2']
+	sfreq = 100
+	prgm_2classes = MotorImagery(n_classes=2, channels=tgt_channels, resample=sfreq, fmin=fmin, fmax=fmax)
+	X_train, y_train = ChoData(ds_src1, prgm_2classes)
+	numdata = 3000
+	with open('./preprocData/X0data.npy', 'rb') as f:
+		x0data = np.load(f)
+	x0data = x0data[:numdata]
+	tmp = np.mean([np.min(x0data), np.max(x0data)])
+	tmp1 = np.mean([np.min(X_train), np.max(X_train)])
+	diff = tmp1/tmp
+	x0data = x0data * diff
+	y0data = np.asarray([2] * numdata)
+	X_train = np.concatenate([X_train, x0data])
+	y_train = np.concatenate([y_train, y0data])
+	return X_train, y_train
+
+def mergeAnswer(files):
+	f1, f2 = files
+	a = np.loadtxt(f1, delimiter=',')
+	b = np.loadtxt(f2, delimiter=',')
+	aa = np.asarray(a[:400])
+	bb = np.asarray(b[400:])
+	c = np.concatenate([aa, bb])
+	return c
 	

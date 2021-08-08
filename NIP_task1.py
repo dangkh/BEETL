@@ -7,6 +7,7 @@ import nets
 import torch.optim as optim
 from torch.optim import lr_scheduler
 from modelUltis import *
+
  
 if __name__ == "__main__":
 	parser = argparse.ArgumentParser(description='Train task 1')
@@ -60,8 +61,8 @@ if __name__ == "__main__":
 
 
 	print("Eval model ...")
-	evaluateModel(model, plotConfusion = True, dataLoader = trainLoader, n_classes = num_class)
-	evaluateModel(model, plotConfusion = True, dataLoader = testLoader, n_classes = num_class)
+	evaluateModel(model, plotConfusion = True, dataLoader = trainLoader, n_class = num_class)
+	evaluateModel(model, plotConfusion = True, dataLoader = testLoader, n_class = num_class)
 
 	# test the target
 
