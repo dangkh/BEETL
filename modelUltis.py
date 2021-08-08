@@ -7,7 +7,7 @@ from modelUltis import *
 import sys
 
 
-def trainModel(model, criterion, n_epochs, optimizer, scheduler, trainLoader, save, log_batch):
+def trainModel(model, criterion, n_epochs, optimizer, scheduler, trainLoader, savePath, log_batch):
 	llos = []
 	for epoch in range(n_epochs):  # loop over the dataset multiple times
 		model.train()
@@ -45,9 +45,11 @@ def trainModel(model, criterion, n_epochs, optimizer, scheduler, trainLoader, sa
 		mean_loss = total_loss / len(trainLoader)
 		llos.append(mean_loss)
 		scheduler.step()
+		sys.stdout.write("\r[{0}] {1}% loss: {2: 3f}".format('#'*50, 100, mean_loss))
+		sys.stdout.flush()
 	print('Finished Training')
-	if save:
-		torch.save(model.state_dict(), "model.pt")
+	if savePath is not None:
+		torch.save(model.state_dict(), savePath)
 
 	return model, llos
 
@@ -90,5 +92,4 @@ def testModel(model, dataLoader ):
 			pred = model(xx)
 			res = torch.argmax(pred, 1)
 			resTest.extend(res.cpu().numpy())
-
 	return resTest
