@@ -10,7 +10,7 @@ from sklearn.metrics import confusion_matrix
 from moabb.datasets import BNCI2014001, Cho2017, PhysionetMI
 from moabb.paradigms import MotorImagery
 from beetl.task_datasets import BeetlSleepLeaderboard, BeetlMILeaderboard
-
+import os
 
 def infoSleepData():
 	with open("./SleepSource/headerInfo.npy", 'rb') as f:
@@ -492,7 +492,7 @@ def getPhyData():
 	X_train, y_train = PhyData(ds_src2, ds_tgt, prgm_4classes)
 	return X_train, y_train
 
-def getChoData():
+def getChoData(datapath='./preprocData/'):
 	# Cho's dataset comprises only data of 2 labels
 	ds_src1 = Cho2017()
 
@@ -502,7 +502,7 @@ def getChoData():
 	prgm_2classes = MotorImagery(n_classes=2, channels=tgt_channels, resample=sfreq, fmin=fmin, fmax=fmax)
 	X_train, y_train = ChoData(ds_src1, prgm_2classes)
 	numdata = 3000
-	with open('./preprocData/X0data.npy', 'rb') as f:
+	with open(os.path.join(datapath, 'X0data.npy'), 'rb') as f:
 		x0data = np.load(f)
 	x0data = x0data[:numdata]
 	tmp = np.mean([np.min(x0data), np.max(x0data)])

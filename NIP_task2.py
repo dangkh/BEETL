@@ -8,6 +8,18 @@ import torch
 import nets
 from modelUltis import *
 
+import random
+import os
+
+# Function to seed everything
+def seed_everything(seed):
+    random.seed(seed)
+    os.environ['PYTHONHASHSEED'] = str(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    torch.backends.cudnn.deterministic = True
 
 
 if __name__ == "__main__":
@@ -24,7 +36,13 @@ if __name__ == "__main__":
 	parser.add_argument('-pretrain', type=str, help = "pretrain model")
 	parser.add_argument('-lognum', type=int, default = 100, help = "Log after Number of training epoch")
 	parser.add_argument('-data', type=int, default = 0, help = "0: load all data; 1: load Phy and BCI; 2: load Cho")
+	parser.add_argument('-datapath', type=str, default = "/mnt/hdd/NIP/BEETL/preprocData/",
+						help='Preprocessed data')
+	parser.add_argument('-seed', type=int, default = 123,
+						help = "Seed")
+
 	args = parser.parse_args()
+	seed_everything(args.seed)
 	params = vars(args)
 
 	print("Load data ...")
@@ -41,7 +59,7 @@ if __name__ == "__main__":
 		X_train, y_train = augmentData_Noise(X_train, y_train, labels = [2])
 		if params['v'] : dataDistribution(y_train, "y_train")
 	elif args.data == 2:
-		X_train, y_train = getChoData()
+		X_train, y_train = getChoData(args.datapath)
 		if params['v'] : dataDistribution(y_train, "y_train")
 		X_train, y_train = augmentData(X_train, y_train, labels = [0, 1, 2])
 		if params['v'] : dataDistribution(y_train, "y_train")
