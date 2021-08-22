@@ -31,6 +31,7 @@ if __name__ == "__main__":
     parser.add_argument('-confusion', type=bool, help="Confusion matrix")
     parser.add_argument('-save', type=str, help="Saving model path")
     parser.add_argument('-lognum', type=int, default=100, help="Log after Number of training epoch")
+    parser.add_argument('-pretrain', type=str, help="pretrain model")
     parser.add_argument('-datapath', type=str, default="/mnt/hdd/NIP/BEETL/preprocData/",
                         help='Preprocessed data')
     parser.add_argument('-seed', type=int, default=123,
@@ -68,7 +69,9 @@ if __name__ == "__main__":
         num_class = len(np.unique(ytrain))
         model = nets.LSTMNet_t2(n_classes=num_class)
         model.double()
-        model.load_state_dict(torch.load("model.pt"))
+        if args.pretrain is not None:
+            model.load_state_dict(torch.load(args.pretrain))
+
         if torch.cuda.is_available():
             model.cuda()
 
