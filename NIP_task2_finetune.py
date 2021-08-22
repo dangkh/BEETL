@@ -96,7 +96,7 @@ if __name__ == "__main__":
 
         with open(dataPath + '/testfile.npy', 'rb') as f:
             testfile = np.load(f)
-        print(testfile.shape)
+        print('Test file: ', testfile.shape)
         fstart, fstop = len_files[idx]
         testbyId = np.copy(testfile[fstart: fstop])
         test_data = EEG_data(testbyId)
@@ -105,8 +105,9 @@ if __name__ == "__main__":
         res = testModel(model, testLoader)
         anwPth = "answer" + str(idx) + ".txt"
         listAnwPth.append(anwPth)
+        print("Predict output: {}, size = {}".format(anwPth, len(res)))
         np.savetxt(anwPth, [res], delimiter=',', fmt="%d")
 
     c = mergeAnswer(listAnwPth)
-    print(len(c))
+    print('Merge len: ', len(c))
     np.savetxt("answer.txt", [c], delimiter=',', fmt="%d")
