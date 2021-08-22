@@ -518,8 +518,6 @@ def mergeAnswer(files):
 	f1, f2 = files
 	a = np.loadtxt(f1, delimiter=',')
 	b = np.loadtxt(f2, delimiter=',')
-	aa = np.asarray(a[:400])
-	bb = np.asarray(b[400:])
-	c = np.concatenate([aa, bb])
+	c = np.concatenate([a, b])
 	return c
 	
