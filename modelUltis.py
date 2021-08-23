@@ -36,7 +36,7 @@ def trainModel(model, criterion, n_epochs, optimizer, scheduler, trainLoader, va
 			# print statistics
 			running_loss += loss.item()
 			total_loss += loss.item()
-			if i % log_batch == (log_batch - 1):    # print every 200 mini-batches
+			if (i + 1) % log_batch == 0:    # print every 200 mini-batches
 				# print('[%d, %5d] loss: %.3f' % (epoch + 1, i + 1, running_loss / log_batch))
 				percent = int(i *50/ len(trainLoader))
 				remain = 50 - percent 
