@@ -46,7 +46,7 @@ if __name__ == "__main__":
 	params = vars(args)
 
 	print("Load data ...")
-	tmp_file = os.path.join(args.path, 'data.npz')
+	tmp_file = os.path.join(args.datapath, 'data.npz')
 	if not os.path.exists(tmp_file):
 		print("Create tmp data")
 		if args.data == 0:
