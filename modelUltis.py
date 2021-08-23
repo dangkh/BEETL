@@ -43,6 +43,9 @@ def trainModel(model, criterion, n_epochs, optimizer, scheduler, trainLoader, va
 				sys.stdout.write("\r[{0}] {1}% loss: {2: 3f}".format('#'*percent + '-'*remain, percent * 2, running_loss / log_batch))
 				sys.stdout.flush()
 				running_loss = 0.0
+
+				break
+
 		mean_loss = total_loss / len(trainLoader)
 		llos.append(mean_loss)
 		scheduler.step()
