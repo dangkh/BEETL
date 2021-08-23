@@ -48,6 +48,7 @@ if __name__ == "__main__":
 	print("Load data ...")
 	tmp_file = os.path.join(args.path, 'data.npz')
 	if not os.path.exists(tmp_file):
+		print("Create tmp data")
 		if args.data == 0:
 			X_train, y_train = getMIData()
 			if params['v'] : dataDistribution(y_train, "y_train")
@@ -72,6 +73,7 @@ if __name__ == "__main__":
 
 		np.savez(tmp_file, X_train=X_train, y_train=y_train)
 	else:
+		print("Load from: ", tmp_file)
 		tmp_data = np.load(tmp_file)
 
 		X_train = tmp_data['X_train']
