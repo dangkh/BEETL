@@ -169,7 +169,7 @@ class WvConvNet(nn.Module):
         self.conv_fs = nn.ModuleList()
         self.bn_fs = nn.ModuleList()
         self.pool_fs = nn.ModuleList()
-        for i in range(16):
+        for i in range(4):
             self.conv_fs.append(nn.Conv2d(in_channels=17, out_channels=self.conv_f_size, kernel_size=[5, 1], stride=1,
                                           dilation=(2 * (i + 1), 1)))
             self.bn_fs.append(nn.BatchNorm2d(self.conv_f_size))
@@ -181,8 +181,8 @@ class WvConvNet(nn.Module):
         n = (depth - 4) / 6
         block = BasicBlock
         # 1st conv before any network block
-        # self.conv1 = nn.Conv2d(4, n_channels[0], kernel_size=3, stride=1,
-        #                       padding=1, bias=False)
+        self.conv1 = nn.Conv2d(4, n_channels[0], kernel_size=3, stride=1,
+                               padding=1, bias=False)
         # 1st block
         self.block1 = NetworkBlock(n, n_channels[0], n_channels[1], block, stride, drop_rate)
         # 2nd block
@@ -223,10 +223,12 @@ class WvConvNet(nn.Module):
             outputs.append(output)
 
         output = torch.stack((outputs), dim=1)
+        #print(output.shape)
         #         output = self.drop_conv(output)
 
-        # out = self.conv1(output)
-        out = self.block1(output)
+        out = self.conv1(output)
+
+        out = self.block1(out)
         out = self.block2(out)
         out = self.block3(out)
         out = self.relu(self.bn1(out))
