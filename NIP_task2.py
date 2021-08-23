@@ -85,10 +85,7 @@ if __name__ == "__main__":
 	scheduler = lr_scheduler.StepLR(optimizer, 16, gamma=0.1, last_epoch=-1)
 	n_epochs = params['e']
 
-	model, llos = trainModel(model, criterion, n_epochs, optimizer, scheduler, trainLoader, params['save'], params['lognum'])
+	model, llos = trainModel(model, criterion, n_epochs, optimizer, scheduler, trainLoader, validLoader, num_class,
+							 params['save'], params['lognum'])
 
 	print("Eval model ...")
-	evaluateModel(model, plotConfusion = True, dataLoader = trainLoader, n_class = num_class)
-	evaluateModel(model, plotConfusion = True, dataLoader = validLoader, n_class = num_class)
-
-	# torch.save(model.state_dict(), "model_state_dict_task2.pt")

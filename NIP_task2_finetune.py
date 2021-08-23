@@ -62,6 +62,10 @@ if __name__ == "__main__":
         Xtrain, ytrain = augmentData_Swap(Xtrain, ytrain, labels=[0, 1, 0, 1, 2])
         # Xtrain, ytrain = augmentData(Xtrain, ytrain, labels = [0, 1, 2])
         if params['v']: dataDistribution(ytrain, "y_train_tranfer")
+        Xtrain = np.transpose(Xtrain, (0, 2, 1))
+        n_samples, n_channels, n_timestamp = Xtrain.shape
+        Xtrain = Xtrain.reshape((n_samples, n_channels, n_timestamp, 1))
+
         trainLoader, validLoader = TrainTestLoader([Xtrain, ytrain], 0.1)
 
         print("Train model ...")
@@ -99,6 +103,10 @@ if __name__ == "__main__":
         print('Test file: ', testfile.shape)
         fstart, fstop = len_files[idx]
         testbyId = np.copy(testfile[fstart: fstop])
+        testbyId = np.transpose(testbyId, (0, 2, 1))
+        n_samples, n_channels, n_timestamp = testbyId.shape
+        testbyId = testbyId.reshape((n_samples, n_channels, n_timestamp, 1))
+
         test_data = EEG_data(testbyId)
         testLoader = torch.utils.data.DataLoader(dataset=test_data, batch_size=32)
 
