@@ -7,8 +7,9 @@ from modelUltis import *
 import sys
 
 
-def trainModel(model, criterion, n_epochs, optimizer, scheduler, trainLoader, savePath, log_batch):
+def trainModel(model, criterion, n_epochs, optimizer, scheduler, trainLoader, validLoader, n_class, savePath, log_batch):
 	llos = []
+	best_acc = 0
 	for epoch in range(n_epochs):  # loop over the dataset multiple times
 		model.train()
 		print("")
@@ -47,9 +48,12 @@ def trainModel(model, criterion, n_epochs, optimizer, scheduler, trainLoader, sa
 		scheduler.step()
 		sys.stdout.write("\r[{0}] {1}% loss: {2: 3f}".format('#'*50, 100, mean_loss))
 		sys.stdout.flush()
-	print('Finished Training')
-	if savePath is not None:
-		torch.save(model.state_dict(), savePath)
+		acc = evaluateModel(model, plotConfusion = True, dataLoader = validLoader, n_class=n_class)
+
+		if acc > best_acc:
+			best_acc = acc
+			if savePath is not None:
+				torch.save(model.state_dict(), savePath)
 
 	return model, llos
 
@@ -58,6 +62,7 @@ def evaluateModel(model, plotConfusion, dataLoader, n_class):
 	total = 0
 	preds = []
 	trueLabel = []
+	model.eval()
 	for idx, data in enumerate(dataLoader):
 		xx, yy = data
 		trueLabel.extend(yy.numpy())
@@ -65,7 +70,6 @@ def evaluateModel(model, plotConfusion, dataLoader, n_class):
 		if torch.cuda.is_available():
 			xx = xx.cuda()
 		with torch.no_grad():
-			model.eval()
 			pred = model(xx)
 			res = torch.argmax(pred, 1)
 			if torch.cuda.is_available():
@@ -80,15 +84,18 @@ def evaluateModel(model, plotConfusion, dataLoader, n_class):
 		plot_confusion_matrix(trueLabel, preds, classes= plotCl, normalize=True, title='Validation confusion matrix')
 		plt.show()
 
+	return 100 * counter / total
+
+
 def testModel(model, dataLoader ):
 	resTest = []
+	model.eval()
 	for idx, data in enumerate(dataLoader):
 		xx = data
 		# cuda
 		if torch.cuda.is_available():
 			xx = xx.cuda()
 		with torch.no_grad():
-			model.eval()
 			pred = model(xx)
 			res = torch.argmax(pred, 1)
 			resTest.extend(res.cpu().numpy())
