@@ -90,8 +90,8 @@ class EEG_data(Dataset):
                  train=True):
 
         self.y = targets
-        mean = np.mean(datas, axis=1, keepdims=True)
-        std = np.std(datas, axis=1, keepdims=True)
+        mean = np.mean(datas, axis=3, keepdims=True)
+        std = np.std(datas, axis=3, keepdims=True)
         self.X = (datas - mean) / std
         self.X = self.X.astype(np.double)
         self.transform = transforms
@@ -156,6 +156,7 @@ def plot_confusion_matrix(y_true, y_pred, classes,
     else:
         print('Confusion matrix, without normalization')
 
+    """
     fig, ax = plt.subplots()
     im = ax.imshow(cm, interpolation='nearest', cmap=cmap)
     ax.figure.colorbar(im, ax=ax)
@@ -183,6 +184,7 @@ def plot_confusion_matrix(y_true, y_pred, classes,
     fig.tight_layout()
     plt.show()
     return ax
+    """
 
 
 def chunk(matrix, step_size=128, window_size=128):

@@ -64,7 +64,7 @@ if __name__ == "__main__":
         if params['v']: dataDistribution(ytrain, "y_train_tranfer")
         Xtrain = np.transpose(Xtrain, (0, 2, 1))
         n_samples, n_channels, n_timestamp = Xtrain.shape
-        Xtrain = Xtrain.reshape((n_samples, n_channels, n_timestamp, 1))
+        Xtrain = Xtrain.reshape((n_samples, 1, n_timestamp, n_channels))
 
         trainLoader, validLoader = TrainTestLoader([Xtrain, ytrain], 0.1)
 
@@ -90,7 +90,7 @@ if __name__ == "__main__":
         model.fc.weight.requires_grad = True
         model.fc.bias.requires_grad = True
 
-        trainModel(model, criterion, n_epochs, optimizer, scheduler, trainLoader, params['save'], params['lognum'])
+        trainModel(model, criterion, n_epochs, optimizer, scheduler, trainLoader, validLoader, 3, params['save'], params['lognum'])
 
         print("Eval model ...")
         evaluateModel(model, plotConfusion=True, dataLoader=trainLoader, n_class=num_class)
@@ -105,7 +105,7 @@ if __name__ == "__main__":
         testbyId = np.copy(testfile[fstart: fstop])
         testbyId = np.transpose(testbyId, (0, 2, 1))
         n_samples, n_channels, n_timestamp = testbyId.shape
-        testbyId = testbyId.reshape((n_samples, n_channels, n_timestamp, 1))
+        testbyId = testbyId.reshape((n_samples, 1, n_timestamp, n_channels))
 
         test_data = EEG_data(testbyId)
         testLoader = torch.utils.data.DataLoader(dataset=test_data, batch_size=32)

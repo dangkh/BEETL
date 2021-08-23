@@ -79,11 +79,14 @@ if __name__ == "__main__":
         X_train = tmp_data['X_train']
         y_train = tmp_data['y_train']
 
+    X_train = np.transpose(X_train, (0, 3, 2, 1))
+
     trainLoader, validLoader = TrainTestLoader([X_train, y_train], 0.1)
 
     print("Train model ...")
     num_class = len(np.unique(y_train))
-    model = WvConvNet(3, 28, 10, drop_rate=0.5, flatten=True, stride=1)
+    #model = WvConvNet(3, 28, 10, drop_rate=0.5, flatten=True, stride=1)
+    model = LSTMNet_t2(3) 
     model.double()
     if args.pretrain is not None:
         model.load_state_dict(torch.load(str(args.pretrain)))

@@ -40,7 +40,7 @@ class LSTMNet(nn.Module):
 class LSTMNet_t2(nn.Module):
     def __init__(self, n_classes):
         super(LSTMNet_t2, self).__init__()
-        self.drop1 = nn.Dropout(0.75)
+        self.drop1 = nn.Dropout(0.25)
         self.fc = nn.Linear(5120, n_classes)
         self.n_classes = n_classes
         self.conv1 = nn.Conv2d(1, 32, [10, 3], stride=[3, 2], padding = [1, 1])

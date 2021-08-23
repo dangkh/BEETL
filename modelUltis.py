@@ -7,23 +7,25 @@ from modelUltis import *
 import sys
 
 
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
+
 def trainModel(model, criterion, n_epochs, optimizer, scheduler, trainLoader, validLoader, n_class, savePath, log_batch):
     llos = []
     best_acc = 0
+
     for epoch in range(n_epochs):  # loop over the dataset multiple times
         model.train()
         print("")
         print("epoch:  {0} / {1}   ".format(epoch, n_epochs))
-        running_loss = 0.0
+        running_loss = []
         total_loss = 0
         for i, data in enumerate(trainLoader):
             # get the inputs; data is a list of [inputs, labels]
             inputs, labels = data
             labels = labels.type(torch.LongTensor)
             # CUDA
-            if torch.cuda.is_available():
-                inputs = inputs.cuda()
-                labels = labels.cuda()
+            inputs = inputs.to(device)
+            labels = labels.to(device)
             # zero the parameter gradients
             optimizer.zero_grad()
 
@@ -34,17 +36,17 @@ def trainModel(model, criterion, n_epochs, optimizer, scheduler, trainLoader, va
             optimizer.step()
 
             # print statistics
-            running_loss += loss.item()
+            running_loss += [loss.item()]
             total_loss += loss.item()
             if (i + 1) % log_batch == 0:    # print every 200 mini-batches
                 # print('[%d, %5d] loss: %.3f' % (epoch + 1, i + 1, running_loss / log_batch))
                 percent = int(i *50/ len(trainLoader))
                 remain = 50 - percent
-                sys.stdout.write("\r[{0}] {1}% loss: {2: 3f}".format('#'*percent + '-'*remain, percent * 2, running_loss / log_batch))
+                sys.stdout.write("\r[{0}] {1}% loss: {2: 3f}".format('#'*percent + '-'*remain, percent * 2, np.mean(running_loss)))
                 sys.stdout.flush()
-                running_loss = 0.0
 
-                break
+                #if (i + 1) / log_batch >= 10:
+                #    break
 
         mean_loss = total_loss / len(trainLoader)
         llos.append(mean_loss)
@@ -70,8 +72,8 @@ def evaluateModel(model, plotConfusion, dataLoader, n_class):
         xx, yy = data
         trueLabel.extend(yy.numpy())
         total += len(yy)
-        if torch.cuda.is_available():
-            xx = xx.cuda()
+        xx = xx.to(device)
+
         with torch.no_grad():
             pred = model(xx)
             res = torch.argmax(pred, 1)
