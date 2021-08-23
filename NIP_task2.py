@@ -46,27 +46,36 @@ if __name__ == "__main__":
 	params = vars(args)
 
 	print("Load data ...")
-	if args.data == 0:
-		X_train, y_train = getMIData()
-		if params['v'] : dataDistribution(y_train, "y_train")
-		X_train, y_train = augmentData(X_train, y_train, labels = [0, 1])
-		X_train, y_train = augmentData_Noise(X_train, y_train, labels = [2])
-		if params['v'] : dataDistribution(y_train, "y_train")
-	elif args.data == 1:
-		X_train, y_train = getPhyData()
-		if params['v'] : dataDistribution(y_train, "y_train")
-		X_train, y_train = augmentData(X_train, y_train, labels = [0, 1])
-		X_train, y_train = augmentData_Noise(X_train, y_train, labels = [2])
-		if params['v'] : dataDistribution(y_train, "y_train")
-	elif args.data == 2:
-		X_train, y_train = getChoData(args.datapath)
-		if params['v'] : dataDistribution(y_train, "y_train")
-		X_train, y_train = augmentData(X_train, y_train, labels = [0, 1, 2])
-		if params['v'] : dataDistribution(y_train, "y_train")
+	tmp_file = os.path.join(args.path, 'data.npz')
+	if not os.path.exists(tmp_file):
+		if args.data == 0:
+			X_train, y_train = getMIData()
+			if params['v'] : dataDistribution(y_train, "y_train")
+			X_train, y_train = augmentData(X_train, y_train, labels = [0, 1])
+			X_train, y_train = augmentData_Noise(X_train, y_train, labels = [2])
+			if params['v'] : dataDistribution(y_train, "y_train")
+		elif args.data == 1:
+			X_train, y_train = getPhyData()
+			if params['v'] : dataDistribution(y_train, "y_train")
+			X_train, y_train = augmentData(X_train, y_train, labels = [0, 1])
+			X_train, y_train = augmentData_Noise(X_train, y_train, labels = [2])
+			if params['v'] : dataDistribution(y_train, "y_train")
+		elif args.data == 2:
+			X_train, y_train = getChoData(args.datapath)
+			if params['v'] : dataDistribution(y_train, "y_train")
+			X_train, y_train = augmentData(X_train, y_train, labels = [0, 1, 2])
+			if params['v'] : dataDistribution(y_train, "y_train")
 
-	X_train = np.transpose(X_train, (0, 2, 1))
-	n_samples, n_channels, n_timestamp = X_train.shape
-	X_train = X_train.reshape((n_samples, n_channels, n_timestamp, 1))
+		X_train = np.transpose(X_train, (0, 2, 1))
+		n_samples, n_channels, n_timestamp = X_train.shape
+		X_train = X_train.reshape((n_samples, n_channels, n_timestamp, 1))
+
+		np.savez(tmp_file, X_train=X_train, y_train=y_train)
+	else:
+		tmp_data = np.load(tmp_file)
+
+		X_train = tmp_data['X_train']
+		y_train = tmp_data['y_train']
 
 	trainLoader, validLoader = TrainTestLoader([X_train, y_train], 0.1)
 
