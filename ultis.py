@@ -93,7 +93,7 @@ class EEG_data(Dataset):
         mean = np.mean(datas, axis=3, keepdims=True)
         std = np.std(datas, axis=3, keepdims=True)
         self.X = (datas - mean) / std
-        self.X = self.X.astype(np.double)
+        self.X = self.X.astype(np.float32)
         self.transform = transforms
 
     def __len__(self):

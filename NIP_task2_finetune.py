@@ -8,6 +8,7 @@ import argparse
 import torch
 from modelUltis import *
 import random
+import NIP_task2
 
 
 # Function to seed everything
@@ -19,6 +20,8 @@ def seed_everything(seed):
     torch.cuda.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
     torch.backends.cudnn.deterministic = True
+
+
 
 
 if __name__ == "__main__":
@@ -65,14 +68,15 @@ if __name__ == "__main__":
         Xtrain = np.transpose(Xtrain, (0, 2, 1))
         n_samples, n_channels, n_timestamp = Xtrain.shape
         Xtrain = Xtrain.reshape((n_samples, 1, n_timestamp, n_channels))
+        Xtrain = np.transpose(Xtrain, (0, 1, 3, 2))
+
 
         trainLoader, validLoader = TrainTestLoader([Xtrain, ytrain], 0.1)
 
         print("Train model ...")
 
         num_class = len(np.unique(ytrain))
-        model = nets.LSTMNet_t2(n_classes=num_class)
-        model.double()
+        model = NIP_task2.get_model()
         if args.pretrain is not None:
             model.load_state_dict(torch.load(args.pretrain))
 
@@ -85,10 +89,10 @@ if __name__ == "__main__":
         scheduler = lr_scheduler.StepLR(optimizer, 16, gamma=0.1, last_epoch=-1)
         n_epochs = params['e']
 
-        for param in model.parameters():
-            param.requires_grad = False
-        model.fc.weight.requires_grad = True
-        model.fc.bias.requires_grad = True
+        #for param in model.parameters():
+        #    param.requires_grad = False
+        #model.fc.weight.requires_grad = True
+        #model.fc.bias.requires_grad = True
 
         trainModel(model, criterion, n_epochs, optimizer, scheduler, trainLoader, validLoader, 3, params['save'], params['lognum'])
 
@@ -106,6 +110,7 @@ if __name__ == "__main__":
         testbyId = np.transpose(testbyId, (0, 2, 1))
         n_samples, n_channels, n_timestamp = testbyId.shape
         testbyId = testbyId.reshape((n_samples, 1, n_timestamp, n_channels))
+        testbyId = np.transpose(testbyId, (0, 1, 3, 2))
 
         test_data = EEG_data(testbyId)
         testLoader = torch.utils.data.DataLoader(dataset=test_data, batch_size=32)

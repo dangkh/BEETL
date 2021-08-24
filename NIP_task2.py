@@ -22,6 +22,74 @@ def seed_everything(seed):
     torch.backends.cudnn.deterministic = True
 
 
+def get_model():
+    
+    input_size = (1, 17, 300)
+
+    print(input_size)
+    fs = 80  # Hz
+    time_window = 100  # ms
+    width = time_window * fs // 1000
+
+    # width = 8 #timelength//chans
+    # convolution parameters
+    h1, w1 = 3, 1
+    h2, w2 = 3, 3
+    h3, w3 = 3, 5
+    ConvDOWN = True
+
+    if ConvDOWN:
+        params1 = {'conv_channels': [
+            [1, 16, 8],
+            [1, 32, 16, 8],
+            [1, 64, 32, 16, 8],
+            [1, 128, 64, 32, 16, 8],
+            [1, 256, 128, 64, 32, 16, 8]
+        ],
+
+            'kernel_size': [[(h1, w1 * width), (h1, w1 * width), (h1, w1 * width),
+                             (h1, w1 * width), (h1, w1 * width), (h1, w1 * width)],
+
+                            [(h2, w2 * width), (h2, w2 * width), (h2, w2 * width),
+                             (h2, w2 * width), (h2, w2 * width), (h2, w2 * width)],
+
+                            [(h3, w3 * width), (h3, w3 * width), (h3, w3 * width),
+                             (h3, w3 * width), (h3, w3 * width), (h3, w3 * width)]]
+        }
+    else:
+        params1 = {'conv_channels': [
+            [1, 8, 16],
+            [1, 8, 16, 32],
+            [1, 8, 16, 32, 64],
+            [1, 8, 16, 32, 64, 128],
+            [1, 8, 16, 32, 64, 128, 256]
+        ],
+
+            'kernel_size': [[(h1, w1 * width), (h1, w1 * width), (h1, w1 * width),
+                             (h1, w1 * width), (h1, w1 * width), (h1, w1 * width)],
+
+                            [(h2, w2 * width), (h2, w2 * width), (h2, w2 * width),
+                             (h2, w2 * width), (h2, w2 * width), (h2, w2 * width)],
+
+                            [(h3, w3 * width), (h3, w3 * width), (h3, w3 * width),
+                             (h3, w3 * width), (h3, w3 * width), (h3, w3 * width)]]
+        }
+    keys = list(params1)
+    d = {
+        'kernel_size': [(h1, w1 * width), (h1, w1 * width), (h1, w1 * width),
+                         (h1, w1 * width), (h1, w1 * width), (h1, w1 * width)],
+        'conv_channels': [1, 8, 16]
+    }
+    model = CNN2D(input_size    = input_size,
+                  kernel_size   = d['kernel_size'],
+                  conv_channels = d['conv_channels'],
+                  dense_size    = 256,
+                  dropout       = 0.5)
+    print("Model architecture >>>", model)
+
+    return model
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Train task 2')
     parser.add_argument('-e', type=int, default = 10, help = "Number of training epoch")
@@ -79,82 +147,22 @@ if __name__ == "__main__":
         X_train = tmp_data['X_train']
         y_train = tmp_data['y_train']
 
-    X_train = np.transpose(X_train, (0, 3, 2, 1))
+    X_train = np.transpose(X_train, (0, 3, 1, 2))
+    print(X_train.shape)
 
     trainLoader, validLoader = TrainTestLoader([X_train, y_train], 0.1)
 
     print("Train model ...")
     num_class = len(np.unique(y_train))
+    model = get_model()
     #model = WvConvNet(3, 28, 10, drop_rate=0.5, flatten=True, stride=1)
-    input_size = (1, 17, 300)
-
-    print(input_size)
-    fs = 80  # Hz
-    time_window = 100  # ms
-    width = time_window * fs // 1000
-
-    # width = 8 #timelength//chans
-    # convolution parameters
-    h1, w1 = 3, 1
-    h2, w2 = 3, 3
-    h3, w3 = 3, 5
-    ConvDOWN = True
-
-    if ConvDOWN:
-        params = {'conv_channels': [
-            [1, 16, 8],
-            [1, 32, 16, 8],
-            [1, 64, 32, 16, 8],
-            [1, 128, 64, 32, 16, 8],
-            [1, 256, 128, 64, 32, 16, 8]
-        ],
-
-            'kernel_size': [[(h1, w1 * width), (h1, w1 * width), (h1, w1 * width),
-                             (h1, w1 * width), (h1, w1 * width), (h1, w1 * width)],
-
-                            [(h2, w2 * width), (h2, w2 * width), (h2, w2 * width),
-                             (h2, w2 * width), (h2, w2 * width), (h2, w2 * width)],
-
-                            [(h3, w3 * width), (h3, w3 * width), (h3, w3 * width),
-                             (h3, w3 * width), (h3, w3 * width), (h3, w3 * width)]]
-        }
-    else:
-        params = {'conv_channels': [
-            [1, 8, 16],
-            [1, 8, 16, 32],
-            [1, 8, 16, 32, 64],
-            [1, 8, 16, 32, 64, 128],
-            [1, 8, 16, 32, 64, 128, 256]
-        ],
-
-            'kernel_size': [[(h1, w1 * width), (h1, w1 * width), (h1, w1 * width),
-                             (h1, w1 * width), (h1, w1 * width), (h1, w1 * width)],
-
-                            [(h2, w2 * width), (h2, w2 * width), (h2, w2 * width),
-                             (h2, w2 * width), (h2, w2 * width), (h2, w2 * width)],
-
-                            [(h3, w3 * width), (h3, w3 * width), (h3, w3 * width),
-                             (h3, w3 * width), (h3, w3 * width), (h3, w3 * width)]]
-        }
-    keys = list(params)
-    d = {
-        'kernel_size': [(h1, w1 * width), (h1, w1 * width), (h1, w1 * width),
-                         (h1, w1 * width), (h1, w1 * width), (h1, w1 * width)],
-        'conv_channels': [1, 8, 16]
-    }
-    model = CNN2D(input_size    = input_size,
-                  kernel_size   = d['kernel_size'],
-                  conv_channels = d['conv_channels'],
-                  dense_size    = 256,
-                  dropout       = 0.5)
-    print("Model architecture >>>", model)
-    model.double()
+    #model.double()
     if args.pretrain is not None:
         model.load_state_dict(torch.load(str(args.pretrain)))
     if torch.cuda.is_available():
         model.cuda()
 
-    criterion = getattr(nn, params['loss'])()
+    criterion = nn.CrossEntropyLoss()
     lr = params['lr']
     optimizer = getattr(optim, 'Adam')(model.parameters(), lr=lr)
     scheduler = lr_scheduler.StepLR(optimizer, 16, gamma=0.1, last_epoch=-1)

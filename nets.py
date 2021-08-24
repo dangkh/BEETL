@@ -267,7 +267,7 @@ class CNN2D(torch.nn.Module):
             ii += 1
         self.flat_dim = self.get_output_dim(input_size, self.cconv)
         self.fc1 = torch.nn.Linear(self.flat_dim, dense_size)
-        self.fc2 = torch.nn.Linear(dense_size, 2)
+        self.fc2 = torch.nn.Linear(dense_size, 3)
 
     def get_output_dim(self, input_size, cconv):
         with torch.no_grad():
@@ -285,6 +285,7 @@ class CNN2D(torch.nn.Module):
             input = self.ReLU(input)
             input = self.MaxPool(input)
             # flatten the CNN output
+
         out = input.view(-1, self.flat_dim)
         out = self.fc1(out)
         out = self.Dropout(out)
