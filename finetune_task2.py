@@ -61,8 +61,8 @@ if __name__ == "__main__":
         print(ytrain.shape)
 
         if params['v']: dataDistribution(ytrain, "y_train_tranfer")
-        Xtrain, ytrain = augmentData(Xtrain, ytrain, labels=[0, 1, 0, 1, 2])
-        Xtrain, ytrain = augmentData_Swap(Xtrain, ytrain, labels=[0, 1, 0, 1, 2])
+        #Xtrain, ytrain = augmentData(Xtrain, ytrain, labels=[0, 1, 0, 1, 2])
+        #Xtrain, ytrain = augmentData_Swap(Xtrain, ytrain, labels=[0, 1, 0, 1, 2])
         # Xtrain, ytrain = augmentData(Xtrain, ytrain, labels = [0, 1, 2])
         if params['v']: dataDistribution(ytrain, "y_train_tranfer")
 
@@ -89,10 +89,12 @@ if __name__ == "__main__":
         scheduler = lr_scheduler.StepLR(optimizer, 16, gamma=0.1, last_epoch=-1)
         n_epochs = params['e']
 
-        #for param in model.parameters():
-        #    param.requires_grad = False
-        #model.fc.weight.requires_grad = True
-        #model.fc.bias.requires_grad = True
+        for param in model.parameters():
+            param.requires_grad = False
+        model.fc1.weight.requires_grad = True
+        model.fc1.bias.requires_grad = True
+        model.fc2.weight.requires_grad = True
+        model.fc2.bias.requires_grad = True
 
         trainModel(model, criterion, n_epochs, optimizer, scheduler, trainLoader, validLoader, 3, params['save'], params['lognum'])
 

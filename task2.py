@@ -36,7 +36,7 @@ def get_model():
     h1, w1 = 3, 1
     h2, w2 = 3, 3
     h3, w3 = 3, 5
-    ConvDOWN = True
+    ConvDOWN = False
 
     if ConvDOWN:
         params1 = {'conv_channels': [
@@ -76,14 +76,13 @@ def get_model():
         }
     keys = list(params1)
     d = {
-        'kernel_size': [(h1, w1 * width), (h1, w1 * width), (h1, w1 * width),
-                         (h1, w1 * width), (h1, w1 * width), (h1, w1 * width)],
-        'conv_channels': [1, 8, 16]
+        'kernel_size': params1['kernel_size'][0],
+        'conv_channels': params1['conv_channels'][0]
     }
     model = CNN2D(input_size    = input_size,
                   kernel_size   = d['kernel_size'],
                   conv_channels = d['conv_channels'],
-                  dense_size    = 256,
+                  dense_size    = 128,
                   dropout       = 0.5)
     print("Model architecture >>>", model)
 
@@ -114,25 +113,25 @@ if __name__ == "__main__":
     params = vars(args)
 
     print("Load data ...")
-    tmp_file = os.path.join(args.datapath, 'data.npz')
+    tmp_file = os.path.join(args.datapath, 'data.npz' if args.data == 0 else 'data%i.npz'%args.data)
     if not os.path.exists(tmp_file):
         print("Create tmp data")
         if args.data == 0:
             X_train, y_train = getMIData()
             if params['v'] : dataDistribution(y_train, "y_train")
-            X_train, y_train = augmentData(X_train, y_train, labels = [0, 1])
-            X_train, y_train = augmentData_Noise(X_train, y_train, labels = [2])
+            #X_train, y_train = augmentData(X_train, y_train, labels = [0, 1])
+            #X_train, y_train = augmentData_Noise(X_train, y_train, labels = [2])
             if params['v'] : dataDistribution(y_train, "y_train")
         elif args.data == 1:
             X_train, y_train = getPhyData()
             if params['v'] : dataDistribution(y_train, "y_train")
-            X_train, y_train = augmentData(X_train, y_train, labels = [0, 1])
-            X_train, y_train = augmentData_Noise(X_train, y_train, labels = [2])
+            #X_train, y_train = augmentData(X_train, y_train, labels = [0, 1])
+            #X_train, y_train = augmentData_Noise(X_train, y_train, labels = [2])
             if params['v'] : dataDistribution(y_train, "y_train")
         elif args.data == 2:
             X_train, y_train = getChoData(args.datapath)
             if params['v'] : dataDistribution(y_train, "y_train")
-            X_train, y_train = augmentData(X_train, y_train, labels = [0, 1, 2])
+            #X_train, y_train = augmentData(X_train, y_train, labels = [0, 1, 2])
             if params['v'] : dataDistribution(y_train, "y_train")
 
         X_train = np.transpose(X_train, (0, 2, 1))
