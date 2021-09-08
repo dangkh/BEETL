@@ -24,12 +24,12 @@ def seed_everything(seed):
 
 def get_model():
     
-    input_size = (1, 17, 300)
+    input_size = (1, 3, 300)
 
     print(input_size)
-    fs = 80  # Hz
-    time_window = 100  # ms
-    width = time_window * fs // 1000
+    fs = 60  # Hz
+    time_window = 200  # ms
+    width = time_window * fs // 2000
 
     # width = 8 #timelength//chans
     # convolution parameters
@@ -58,7 +58,7 @@ def get_model():
         }
     else:
         params1 = {'conv_channels': [
-            [1, 8, 16],
+            [1, 4, 8],
             [1, 8, 16, 32],
             [1, 8, 16, 32, 64],
             [1, 8, 16, 32, 64, 128],

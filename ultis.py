@@ -90,10 +90,8 @@ class EEG_data(Dataset):
                  train=True):
 
         self.y = targets
-        mean = np.mean(datas, axis=3, keepdims=True)
-        std = np.std(datas, axis=3, keepdims=True)
-        self.X = (datas - mean) / std
-        self.X = self.X.astype(np.float32)
+        #self.X = (datas - mean) / std
+        self.X = datas.astype(np.float32) * 1e3
         self.transform = transforms
 
     def __len__(self):
@@ -108,9 +106,17 @@ class EEG_data(Dataset):
 
 def TrainTestLoader(data, testSize=0.1):
     if len(data) == 2:
-        X_train, X_test, y_train, y_test = train_test_split(data[0], data[1], test_size=testSize, random_state=42)
+        mean = np.mean(data[0], axis=3, keepdims=True)
+        std = np.std(data[0], axis=3, keepdims=True)
+        data[0] = (data[0] - mean)/std
+
+        #print(data[0].shape)
+        _data = data[0][:, :, 0:3, :]
+
+        X_train, X_test, y_train, y_test = train_test_split(_data, data[1], test_size=testSize, random_state=42)
     else:
         [X_train, y_train, X_test, y_test] = data
+
     batch_size = 32
 
     train_dataset = EEG_data(X_train, y_train)

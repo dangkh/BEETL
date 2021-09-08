@@ -8,7 +8,7 @@ import argparse
 import torch
 from modelUltis import *
 import random
-import NIP_task2
+import task2
 
 
 # Function to seed everything
@@ -71,12 +71,12 @@ if __name__ == "__main__":
         n_samples, n_channels, n_timestamp = Xtrain.shape
         Xtrain = Xtrain.reshape((n_samples, 1, n_channels, n_timestamp))
 
-        trainLoader, validLoader = TrainTestLoader([Xtrain, ytrain], 0.1)
+        trainLoader, validLoader = TrainTestLoader([Xtrain, ytrain], 0.2)
 
         print("Train model ...")
 
         num_class = len(np.unique(ytrain))
-        model = NIP_task2.get_model()
+        model = task2.get_model()
         if args.pretrain is not None:
             model.load_state_dict(torch.load(args.pretrain))
 
@@ -110,9 +110,16 @@ if __name__ == "__main__":
         fstart, fstop = len_files[idx]
         testbyId = np.copy(testfile[fstart: fstop])
         testbyId = np.transpose(testbyId, (0, 2, 1))
+        
+        
         print(testbyId.shape)
         n_samples, n_channels, n_timestamp = testbyId.shape
         testbyId = testbyId.reshape((n_samples, 1, n_channels, n_timestamp))
+        testbyId = testbyId[:, :, 0:3, :]
+
+        mean = np.mean(testbyId, axis=3, keepdims=True)
+        std = np.std(testbyId, axis=3, keepdims=True)
+        testbyId = (testbyId - mean)/std
 
         test_data = EEG_data(testbyId)
         testLoader = torch.utils.data.DataLoader(dataset=test_data, batch_size=32)

@@ -249,14 +249,18 @@ class CNN2D(torch.nn.Module):
                  dense_size, dropout):
         super(CNN2D, self).__init__()
         self.cconv = []
-        self.MaxPool = nn.MaxPool2d((1, 2), (1, 2))
+        self.MaxPool = nn.MaxPool2d((1, 4), (1, 4))
         self.ReLU = nn.ReLU()
         self.Dropout = nn.Dropout(dropout)
         self.batchnorm = []
+        self.dropouts = []
         # ############ batchnorm ###########
         for jj in conv_channels:
             self.batchnorm.append(nn.BatchNorm2d(jj, eps=0.001, momentum=0.01,
                                                  affine=True, track_running_stats=True).cuda())
+
+            self.dropouts.append(nn.Dropout(0.5))
+
         ii = 0  ##### define CONV layer architecture: #####
         for in_channels, out_channels in zip(conv_channels, conv_channels[1:]):
             conv_i = torch.nn.Conv2d(in_channels=in_channels, out_channels=out_channels,
@@ -291,6 +295,7 @@ class CNN2D(torch.nn.Module):
             x = conv_i(x)
             x = self.batchnorm[jj + 1](x)
             x = self.ReLU(x)
+            x = self.dropouts[jj](x)
             x = self.MaxPool(x)
             
         # flatten the CNN output
