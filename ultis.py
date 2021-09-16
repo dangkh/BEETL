@@ -217,10 +217,11 @@ def chunk_matrix(list_data, list_target, step_size=32, window_size=128):
 def addNoise(data, target):
     list_newdata = []
     list_newtarget = []
+    mean = np.mean(np.asarray(target))
     for idx in range(len(data)):
         tmpTarget = [0] * 12
         matrix = np.copy(data[idx])
-        noise = np.random.normal(0, 0.1, size=matrix.shape)
+        noise = np.random.normal(mean, 0.1, size=matrix.shape)
         newmatrix = matrix + noise
         newmatrix = newmatrix.astype(np.double)
         list_newdata.append(newmatrix)

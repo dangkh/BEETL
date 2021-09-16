@@ -14,7 +14,7 @@ if __name__ == "__main__":
 	parser.add_argument('-e', type=int, default = 10, help = "Number of training epoch")
 	parser.add_argument('-lr', type=float, default = 0.0001, help = "Learning rate")
 	parser.add_argument('-v', type=bool, default = False, help = "Visualize data")
-	parser.add_argument('-net', type=str, default = "LSTMNet", help = "Model")
+	parser.add_argument('-net', type=str, default = "LSTMNet_t1_65", help = "Model")
 	parser.add_argument('-loss', type=str, default = "CrossEntropyLoss", help = "Loss for model")
 	parser.add_argument('-optim', type=str, help = "Optimizer for model")
 	parser.add_argument('-valid', type=bool, help = "Check on valid fold")
